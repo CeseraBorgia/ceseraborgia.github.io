@@ -159,4 +159,10 @@ async function bootstrap() {
   console.log('[LunarRave] Ready for TikTok LIVE!');
 }
 
-window.addEventListener('DOMContentLoaded', bootstrap);
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', () => {
+    bootstrap().catch(err => console.error('[LunarRave Boot Error]:', err));
+  });
+} else {
+  bootstrap().catch(err => console.error('[LunarRave Boot Error]:', err));
+}
