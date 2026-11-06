@@ -31,7 +31,7 @@ export class ControlPanel {
   private isAutoSimulating: boolean = false;
   private autoSimInterval: number | null = null;
   private isAudioPlaying: boolean = false;
-  private isCollapsed: boolean = false;
+  private isCollapsed: boolean = true; // Varsayılan olarak kapalı başlar
 
   constructor(crowd: CrowdManager, particles: ParticleSystem, hud: HUD) {
     this.crowd = crowd;
@@ -40,10 +40,27 @@ export class ControlPanel {
 
     this.containerEl = document.createElement('div');
     this.containerEl.id = 'simulation-controls';
+
+    // 1. TikTok LIVE Studio veya OBS Clean Modu Kontrolü
+    const urlParams = new URLSearchParams(window.location.search);
+    const isCleanMode =
+      urlParams.has('clean') ||
+      urlParams.has('obs') ||
+      urlParams.has('stream') ||
+      urlParams.has('live') ||
+      urlParams.has('hide') ||
+      Boolean((window as unknown as { obsstudio?: unknown }).obsstudio) ||
+      localStorage.getItem('lunar_sim_hidden') === 'true';
+
+    if (isCleanMode) {
+      this.containerEl.style.display = 'none';
+      document.body.classList.add('clean-obs-mode');
+    }
+
     this.render();
     document.body.appendChild(this.containerEl);
 
-    // Keyboard shortcut 'H' to toggle panel
+    // Klavye kısayolu 'H' ile paneli gizle / göster
     window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'h' && (e.target as HTMLElement).tagName !== 'INPUT') {
         this.toggleCollapse();
@@ -57,7 +74,7 @@ export class ControlPanel {
     const toggleBtn = this.containerEl.querySelector('.btn-toggle-panel') as HTMLElement;
     if (bodyEl && toggleBtn) {
       bodyEl.style.display = this.isCollapsed ? 'none' : 'block';
-      toggleBtn.innerText = this.isCollapsed ? '▶ Show Controls [H]' : '▼ Hide Controls [H]';
+      toggleBtn.innerText = this.isCollapsed ? '▶ Aç [H]' : '▼ Kapat [H]';
     }
   }
 
@@ -75,42 +92,50 @@ export class ControlPanel {
         <div class="panel-header">
           <div class="panel-title">
             <span class="pulse-dot"></span>
-            <span>LUNAR RAVE SIMULATOR</span>
+            <span>SIMULATOR</span>
           </div>
-          <button class="btn-toggle-panel">▼ Hide Controls [H]</button>
+          <div class="panel-header-actions">
+            <button class="btn-toggle-panel">▶ Aç [H]</button>
+            <button class="btn-close-forever" title="Yayında görünmesin (Tamamen Gizle)">✕</button>
+          </div>
         </div>
 
-        <div class="panel-body">
+        <div class="panel-body" style="display: none;">
+          <div class="clean-url-notice">
+            <span>📺 OBS / TikTok LIVE için temiz link:</span>
+            <code>?clean=1</code>
+          </div>
+
           <div class="control-section">
-            <div class="section-label">⚡ QUICK SIMULATION</div>
+            <div class="section-label">⚡ HIZLI TEST</div>
             <div class="btn-grid">
-              <button id="btn-auto-sim" class="btn btn-primary">⚡ Start Auto-Sim</button>
-              <button id="btn-audio-toggle" class="btn btn-audio">🎵 Sound: OFF</button>
+              <button id="btn-auto-sim" class="btn btn-primary">⚡ Test Simülasyonu</button>
+              <button id="btn-audio-toggle" class="btn btn-audio">🎵 Müzik: KAPALI</button>
             </div>
           </div>
 
           <div class="control-section">
-            <div class="section-label">👥 CROWD & LANES (TIER SYSTEM)</div>
+            <div class="section-label">👥 KALABALIK & DANS</div>
             <div class="btn-grid">
-              <button id="btn-spawn-viewer" class="btn">👤 Join (Back Row)</button>
-              <button id="btn-follower-leap" class="btn btn-cyan">🚀 Follow (Leap to Mid)</button>
-              <button id="btn-like" class="btn btn-pink">❤️ Like Stream</button>
+              <button id="btn-spawn-viewer" class="btn">👤 Katıl (Arka Sıra)</button>
+              <button id="btn-follower-leap" class="btn btn-cyan">🚀 Takipçi Zıpla</button>
+              <button id="btn-like" class="btn btn-pink">❤️ Beğen</button>
             </div>
           </div>
 
           <div class="control-section">
-            <div class="section-label">🎁 GIFTS (FRONT VIP PROMOTION)</div>
+            <div class="section-label">🎁 HEDİYELER (VIP ÖN SIRA)</div>
             <div class="btn-grid">
-              <button id="btn-gift-small" class="btn btn-gift-small">🌹 Rose (Small)</button>
-              <button id="btn-gift-mid" class="btn btn-gift-mid">🚀 Rocket (Mid)</button>
-              <button id="btn-gift-big" class="btn btn-gift-big">🪐 Galaxy Supernova (VIP)</button>
+              <button id="btn-gift-small" class="btn btn-gift-small">🌹 Gül (Küçük)</button>
+              <button id="btn-gift-mid" class="btn btn-gift-mid">🚀 Roket (Orta)</button>
+              <button id="btn-gift-big" class="btn btn-gift-big">🪐 Galaksi Süpernova (VIP Lazer)</button>
             </div>
           </div>
 
           <div class="control-section">
-            <div class="section-label">💬 TURKISH COMMENTS & SPEECH BUBBLE</div>
+            <div class="section-label">💬 TÜRKÇE YORUM & BALON</div>
             <div class="comment-input-row">
-              <input type="text" id="input-comment" placeholder="Yorum yaz (örn: Takipteyim! 🚀)" value="Takipteyim! 🚀" />
+              <input type="text" id="input-comment" placeholder="Yorum yaz..." value="Takipteyim! 🚀" />
               <button id="btn-send-comment" class="btn btn-comment">Gönder</button>
             </div>
             <div class="quick-phrase-tags">
@@ -122,11 +147,7 @@ export class ControlPanel {
           </div>
 
           <div class="control-section">
-            <div class="section-label">⚡ SPECIAL EVENTS</div>
-            <div class="btn-grid">
-              <button id="btn-super-rave" class="btn btn-gold">💥 Trigger 100% Super Rave</button>
-              <button id="btn-obs-mode" class="btn btn-obs">📺 OBS Mode (Clean Canvas)</button>
-            </div>
+            <button id="btn-obs-mode" class="btn btn-obs">📺 Bu Paneli Yayında Tamamen Gizle</button>
           </div>
         </div>
       </div>
@@ -136,9 +157,15 @@ export class ControlPanel {
   }
 
   private attachEventListeners() {
-    // Toggle button
+    // Aç / Kapat
     this.containerEl.querySelector('.btn-toggle-panel')?.addEventListener('click', () => {
       this.toggleCollapse();
+    });
+
+    // Tamamen Kapat (Çarpı butonu)
+    this.containerEl.querySelector('.btn-close-forever')?.addEventListener('click', () => {
+      this.containerEl.style.display = 'none';
+      localStorage.setItem('lunar_sim_hidden', 'true');
     });
 
     // Auto Sim
@@ -146,11 +173,11 @@ export class ControlPanel {
     autoSimBtn?.addEventListener('click', () => {
       this.isAutoSimulating = !this.isAutoSimulating;
       if (this.isAutoSimulating) {
-        autoSimBtn.innerText = '⏹ Stop Auto-Sim';
+        autoSimBtn.innerText = '⏹ Simülasyonu Durdur';
         autoSimBtn.classList.add('active');
         this.startAutoSimulation();
       } else {
-        autoSimBtn.innerText = '⚡ Start Auto-Sim';
+        autoSimBtn.innerText = '⚡ Test Simülasyonu';
         autoSimBtn.classList.remove('active');
         this.stopAutoSimulation();
       }
@@ -161,7 +188,7 @@ export class ControlPanel {
     audioBtn?.addEventListener('click', () => {
       const isPlaying = soundEngine.toggle();
       this.isAudioPlaying = isPlaying;
-      audioBtn.innerText = isPlaying ? '🔊 Sound: ON' : '🎵 Sound: OFF';
+      audioBtn.innerText = isPlaying ? '🔊 Müzik: AÇIK' : '🎵 Müzik: KAPALI';
       audioBtn.classList.toggle('active', isPlaying);
     });
 
@@ -200,7 +227,7 @@ export class ControlPanel {
       this.hud.addPartyScore(15);
     });
 
-    // Big Gift (Galaxy Supernova + Celestial Laser)
+    // Big Gift
     this.containerEl.querySelector('#btn-gift-big')?.addEventListener('click', () => {
       const u = this.getRandomUser();
       this.crowd.handleGift(u, 'Galaxy Rave', 'big', this.particles);
@@ -234,29 +261,10 @@ export class ControlPanel {
       });
     });
 
-    // Super Rave
-    this.containerEl.querySelector('#btn-super-rave')?.addEventListener('click', () => {
-      this.hud.addPartyScore(100);
-      soundEngine.playGiftSFX('big');
-      this.particles.triggerBigGift(540, 1200, 0xff00bb);
-    });
-
-    // OBS Mode
+    // Paneli Tamamen Gizle
     this.containerEl.querySelector('#btn-obs-mode')?.addEventListener('click', () => {
       this.containerEl.style.display = 'none';
-      const hint = document.createElement('div');
-      hint.id = 'obs-hint';
-      hint.innerText = 'OBS Clean Mode Active. Press [H] to restore controls.';
-      document.body.appendChild(hint);
-
-      const restore = (e: KeyboardEvent) => {
-        if (e.key.toLowerCase() === 'h') {
-          this.containerEl.style.display = 'block';
-          hint.remove();
-          window.removeEventListener('keydown', restore);
-        }
-      };
-      window.addEventListener('keydown', restore);
+      localStorage.setItem('lunar_sim_hidden', 'true');
     });
   }
 
@@ -268,24 +276,19 @@ export class ControlPanel {
       const user = this.getRandomUser();
 
       if (rand < 0.35) {
-        // Likes
         this.crowd.handleLike(user, this.particles);
         this.hud.addPartyScore(1);
       } else if (rand < 0.60) {
-        // Comment
         const phrase = this.getRandomPhrase();
         this.crowd.handleComment(user, phrase);
         this.hud.addPartyScore(2);
       } else if (rand < 0.80) {
-        // Follower Leap
         this.crowd.handleFollow(user);
         this.hud.addPartyScore(4);
       } else if (rand < 0.93) {
-        // Small/Mid Gift
         this.crowd.handleGift(user, 'Neon Rose', 'small', this.particles);
         this.hud.addPartyScore(6);
       } else {
-        // Big Gift!
         this.crowd.handleGift(user, 'Galaxy Supernova', 'big', this.particles);
         this.hud.addPartyScore(25);
       }
