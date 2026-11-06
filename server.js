@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
-import { WebcastPushConnection } from 'tiktok-live-connector';
+import { TikTokLiveConnection } from 'tiktok-live-connector';
 
 const PORT = process.env.PORT || 8080;
 let tiktokUsername = process.env.TIKTOK_USERNAME || 'avokadobey';
@@ -148,7 +148,7 @@ function connectToTikTok(username) {
   console.log(`\n📡 Connecting to TikTok LIVE: @${cleanUser}...`);
 
   try {
-    tiktokConnection = new WebcastPushConnection(cleanUser, {
+    tiktokConnection = new TikTokLiveConnection(cleanUser, {
       processInitialData: false,
       enableExtendedGiftInfo: true,
       enableWebsocketUpgrade: true,
