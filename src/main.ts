@@ -1,3 +1,4 @@
+import './style.css';
 import { Application } from 'pixi.js';
 import { Environment } from './engine/Environment';
 import { CrowdManager } from './engine/CrowdManager';
