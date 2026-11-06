@@ -41,29 +41,27 @@ export class ControlPanel {
     this.containerEl = document.createElement('div');
     this.containerEl.id = 'simulation-controls';
 
-    // 1. TikTok LIVE Studio veya OBS Clean Modu Kontrolü
+    // Varsayılan olarak paneli GİZLİ başlat (Yayında asla görünmez)
+    // Sadece ?sim=1 veya ?test=1 parametresi varsa veya 'H' tuşuna basılırsa açılır
     const urlParams = new URLSearchParams(window.location.search);
-    const isCleanMode =
-      urlParams.has('clean') ||
-      urlParams.has('obs') ||
-      urlParams.has('stream') ||
-      urlParams.has('live') ||
-      urlParams.has('hide') ||
-      Boolean((window as unknown as { obsstudio?: unknown }).obsstudio) ||
-      localStorage.getItem('lunar_sim_hidden') === 'true';
+    const shouldShowSim = urlParams.has('sim') || urlParams.has('test') || urlParams.has('panel');
 
-    if (isCleanMode) {
+    if (!shouldShowSim) {
       this.containerEl.style.display = 'none';
-      document.body.classList.add('clean-obs-mode');
     }
 
     this.render();
     document.body.appendChild(this.containerEl);
 
-    // Klavye kısayolu 'H' ile paneli gizle / göster
+    // Klavye kısayolu 'H' ile test panelini aç / kapat
     window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'h' && (e.target as HTMLElement).tagName !== 'INPUT') {
-        this.toggleCollapse();
+        const isHidden = this.containerEl.style.display === 'none';
+        this.containerEl.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+          const bodyEl = this.containerEl.querySelector('.panel-body') as HTMLElement;
+          if (bodyEl) bodyEl.style.display = 'block';
+        }
       }
     });
   }
