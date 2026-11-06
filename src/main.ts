@@ -12,13 +12,13 @@ import { TikTokEvent } from './types';
 async function bootstrap() {
   console.log('[LunarRave] Bootstrapping TikTok LIVE Interactive Lunar Rave...');
 
-  // 1. Initialize PixiJS Application (1080x1920 vertical canvas)
+  // 1. Initialize PixiJS Application (Exact 1080x1920 vertical canvas)
   const app = new Application();
   await app.init({
     width: 1080,
     height: 1920,
-    resolution: Math.min(window.devicePixelRatio || 1, 2),
-    autoDensity: true,
+    resolution: 1,
+    autoDensity: false,
     backgroundColor: 0x03020c,
     antialias: true
   });
@@ -29,6 +29,28 @@ async function bootstrap() {
   } else {
     document.body.appendChild(app.canvas);
   }
+
+  // Pixel-perfect auto scaler for any window size
+  function fitScreen() {
+    const wrapper = document.getElementById('app-wrapper');
+    if (!wrapper) return;
+
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+
+    // Exact 1080x1920 in TikTok LIVE Studio or OBS
+    if (Math.abs(winW - 1080) < 4 && Math.abs(winH - 1920) < 4) {
+      wrapper.style.transform = 'none';
+      return;
+    }
+
+    // Auto fit proportionally without distortion or blur
+    const scale = Math.min(winW / 1080, winH / 1920);
+    wrapper.style.transform = `scale(${scale})`;
+  }
+
+  window.addEventListener('resize', fitScreen);
+  fitScreen();
 
   // 2. Instantiate Systems
   const environment = new Environment();
