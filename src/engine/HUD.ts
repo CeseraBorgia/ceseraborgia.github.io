@@ -139,9 +139,9 @@ export class HUD {
     this.raveBannerText.visible = true;
   }
 
-  public setMode(isLive: boolean) {
+  public setMode(isLive: boolean, username: string = 'avokadobey') {
     if (isLive) {
-      this.statusText.text = '🔴 TikTok LIVE:\nCONNECTED';
+      this.statusText.text = `🔴 TikTok LIVE:\n@${username}`;
       this.statusText.style.fill = 0x00f0ff;
     } else {
       this.statusText.text = '((•)) Simulation Mode:\nACTIVE';

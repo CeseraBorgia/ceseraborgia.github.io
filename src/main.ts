@@ -62,7 +62,15 @@ async function bootstrap() {
   );
   wsClient.connect();
 
-  function handleLiveEvent(event: TikTokEvent) {
+  function handleLiveEvent(event: any) {
+    if (event.type === 'tiktok_status') {
+      hud.setMode(event.connected, event.username);
+      return;
+    }
+    if (event.type === 'connected') {
+      hud.setMode(event.isTikTokConnected, event.tiktokUsername);
+      return;
+    }
     if (event.type === 'join') {
       crowd.handleJoin(event.data.username);
       hud.addPartyScore(1);

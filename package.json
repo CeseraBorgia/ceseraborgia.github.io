@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "pixi.js": "^8.22.0",
+    "tiktok-live-connector": "^2.5.0",
     "typescript": "^5.7.0",
     "vite": "^8.3.6",
     "ws": "^8.22.1"
