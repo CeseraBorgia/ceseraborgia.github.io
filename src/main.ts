@@ -47,8 +47,14 @@ async function bootstrap() {
   // 4. Initialize initial crowd (24 back lurkers, 4 followers, 3 VIPs)
   crowd.initCrowd();
 
-  // 5. Initialize Simulation Control Panel
-  new ControlPanel(crowd, particles, hud);
+  // 5. Initialize Simulation Control Panel (Yalnızca yerel testte veya ?sim=1 girilirse açılır)
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const urlParams = new URLSearchParams(window.location.search);
+  const showSim = urlParams.has('sim') || urlParams.has('debug') || urlParams.has('test');
+
+  if (showSim || (isLocal && !urlParams.has('clean'))) {
+    new ControlPanel(crowd, particles, hud);
+  }
 
   // 6. Initialize WebSocket Client for TikTok LIVE Bridge
   const wsClient = new WebSocketClient('ws://localhost:8080');
