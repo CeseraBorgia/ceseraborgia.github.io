@@ -46,8 +46,8 @@ export class ControlPanel {
     const urlParams = new URLSearchParams(window.location.search);
     const shouldShowSim = urlParams.has('sim') || urlParams.has('test') || urlParams.has('panel');
 
-    if (!shouldShowSim) {
-      this.containerEl.style.display = 'none';
+    if (shouldShowSim) {
+      document.body.classList.add('show-sim');
     }
 
     this.render();
@@ -56,12 +56,9 @@ export class ControlPanel {
     // Klavye kısayolu 'H' ile test panelini aç / kapat
     window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'h' && (e.target as HTMLElement).tagName !== 'INPUT') {
-        const isHidden = this.containerEl.style.display === 'none';
-        this.containerEl.style.display = isHidden ? 'block' : 'none';
-        if (isHidden) {
-          const bodyEl = this.containerEl.querySelector('.panel-body') as HTMLElement;
-          if (bodyEl) bodyEl.style.display = 'block';
-        }
+        document.body.classList.toggle('show-sim');
+        const bodyEl = this.containerEl.querySelector('.panel-body') as HTMLElement;
+        if (bodyEl) bodyEl.style.display = 'block';
       }
     });
   }
