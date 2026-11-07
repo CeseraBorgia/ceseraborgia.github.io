@@ -110,20 +110,21 @@ export class ControlPanel {
           </div>
 
           <div class="control-section">
-            <div class="section-label">👥 5 KATMANLI DANS PİSTİ</div>
+            <div class="section-label">👥 4 KATMANLI DANS PİSTİ</div>
             <div class="btn-grid">
-              <button id="btn-spawn-viewer" class="btn">👤 Katıl (Tier 5)</button>
-              <button id="btn-follower-leap" class="btn btn-cyan">🚀 Takip Et (Tier 4)</button>
+              <button id="btn-spawn-viewer" class="btn">👤 Katıl (Tier 1 İzleyici)</button>
+              <button id="btn-follower-leap" class="btn btn-cyan">🚀 Takip Et (Tier 2)</button>
               <button id="btn-like" class="btn btn-pink">❤️ Beğen (Tier 3 - 1dk)</button>
+              <button id="btn-50-likes" class="btn btn-purple">✨ 50 Beğeni (Karakter Değişimi)</button>
             </div>
           </div>
 
           <div class="control-section">
-            <div class="section-label">🎁 HEDİYELER & TOP 3 VIP</div>
+            <div class="section-label">🎁 HEDİYELER & DJ YANI VIP</div>
             <div class="btn-grid">
-              <button id="btn-gift-small" class="btn btn-gift-small">🌹 Gül (Tier 2 - 10sn)</button>
-              <button id="btn-gift-mid" class="btn btn-gift-mid">🚀 Roket (Tier 2)</button>
-              <button id="btn-gift-big" class="btn btn-gift-big">👑 Galaksi (Tier 1 Top 3 - 15sn)</button>
+              <button id="btn-gift-small" class="btn btn-gift-small">🌹 Gül (Tier 4 - Kalıcı En Ön)</button>
+              <button id="btn-gift-mid" class="btn btn-gift-mid">🚀 Roket (Tier 4 - Kalıcı)</button>
+              <button id="btn-gift-big" class="btn btn-gift-big">👑 Galaksi (DJ Yanı VIP - 30sn)</button>
             </div>
           </div>
 
@@ -187,42 +188,52 @@ export class ControlPanel {
       audioBtn.classList.toggle('active', isPlaying);
     });
 
-    // Spawn Viewer
+    // Spawn Viewer (Tier 1)
     this.containerEl.querySelector('#btn-spawn-viewer')?.addEventListener('click', () => {
       const u = `user_${Math.floor(100 + Math.random() * 899)}`;
       this.crowd.handleJoin(u);
       this.hud.addPartyScore(1);
     });
 
-    // Follower Leap
+    // Follower Leap (Tier 2)
     this.containerEl.querySelector('#btn-follower-leap')?.addEventListener('click', () => {
       const u = this.getRandomUser();
       this.crowd.handleFollow(u);
       this.hud.addPartyScore(4);
     });
 
-    // Like
+    // Like (Tier 3 - 1dk)
     this.containerEl.querySelector('#btn-like')?.addEventListener('click', () => {
       const u = this.getRandomUser();
       this.crowd.handleLike(u, this.particles);
       this.hud.addPartyScore(2);
     });
 
-    // Small Gift
+    // 50 Likes Test (Mutates character appearance)
+    this.containerEl.querySelector('#btn-50-likes')?.addEventListener('click', () => {
+      const u = this.getRandomUser();
+      const av = this.crowd.handleLike(u, this.particles);
+      // Simulate rapid 50 likes
+      av.likeCount = 49;
+      this.crowd.handleLike(u, this.particles);
+      this.hud.addPartyScore(10);
+    });
+
+    // Small Gift (Tier 4 - Kalıcı en önde)
     this.containerEl.querySelector('#btn-gift-small')?.addEventListener('click', () => {
       const u = this.getRandomUser();
       this.crowd.handleGift(u, 'Rose', 'small', this.particles, 5);
       this.hud.addPartyScore(5);
     });
 
-    // Medium Gift
+    // Medium Gift (Tier 4 - Kalıcı en önde)
     this.containerEl.querySelector('#btn-gift-mid')?.addEventListener('click', () => {
       const u = this.getRandomUser();
       this.crowd.handleGift(u, 'Rocket', 'medium', this.particles, 30);
       this.hud.addPartyScore(15);
     });
 
-    // Big Gift
+    // Big Gift (DJ Yanı VIP - 30sn)
     this.containerEl.querySelector('#btn-gift-big')?.addEventListener('click', () => {
       const u = this.getRandomUser();
       this.crowd.handleGift(u, 'Galaxy Rave', 'big', this.particles, 100);

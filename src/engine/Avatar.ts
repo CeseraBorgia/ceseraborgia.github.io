@@ -1,6 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 import {
   AvatarProfile,
+  DanceStyle,
   EyewearType,
   HairStyle,
   LaneType,
@@ -9,63 +10,83 @@ import {
 } from '../types';
 import { ParticleSystem } from './ParticleSystem';
 
-// 5 Natural Skin Tones
+// 6 Diverse Natural Human Skin Tones
 const SKIN_TONES = [
-  0xffe0bd, // Light / Fair
-  0xf5c396, // Warm Peach
-  0xd49b6a, // Golden Tan
-  0x9d6232, // Warm Caramel
-  0x4a2c13  // Deep Espresso
+  0xffdfc4, // Fair / Light Ivory
+  0xf0c08a, // Warm Peach
+  0xdba377, // Golden Olive / Tan
+  0xa86e3b, // Rich Caramel
+  0x784421, // Deep Bronze
+  0x472714  // Deep Espresso
+];
+
+// Eye Iris Colors
+const EYE_COLORS = [
+  0x3d2314, // Deep Brown
+  0x1b4d3e, // Forest Green
+  0x1e3f66, // Ocean Blue
+  0x6e431f, // Amber / Hazel
+  0x00d4ff, // Cyber Cyan
+  0x8a2be2  // Cyber Violet
 ];
 
 // 10 Hair Colors (Natural + Cyber Rave)
 const HAIR_COLORS = [
-  0x111111, // Jet Black
-  0x4a2e18, // Chestnut Brown
-  0xd4a359, // Golden Blonde
-  0x8b321a, // Auburn Red
+  0x151515, // Jet Black
+  0x402511, // Dark Brown
+  0xd19d53, // Honey Blonde
+  0x872912, // Auburn Ginger
   0x00f0ff, // Neon Electric Cyan
   0xff00bb, // Hot Rave Pink
   0x39ff14, // Acid Lime
-  0xaa44ff, // Cyber Violet
+  0x9933ff, // Cyber Purple
   0xffea00, // Solar Yellow
-  0xe0e6ed  // Silver White
+  0xdce2ec  // Platinum White
 ];
 
 // Rave Clothes Palette
 const CLOTHES_COLORS = [
-  0x1e2433, // Midnight Slate
-  0x2b3856, // Deep Space Navy
-  0x551a8b, // Neon Purple
-  0x8b1a4a, // Rave Magenta
-  0x0f5257, // Cyber Teal
-  0x4a5d4e, // Olive Camo
-  0xff3366, // Hot Coral
-  0xffaa00, // Electric Amber
-  0x00d4ff, // Cyber Blue
-  0x222226, // Matte Stealth Black
-  0xf0f3f8, // Lunar Holographic White
-  0x330066  // Ultra Violet
+  0x161a29, // Midnight Slate
+  0x1e2e4e, // Deep Space Navy
+  0x4c166d, // Neon Purple
+  0x7c1448, // Rave Magenta
+  0x0f4b52, // Cyber Teal
+  0x3b4a3e, // Olive Camo
+  0xff2a5f, // Hot Coral
+  0xff9900, // Electric Amber
+  0x00c8f8, // Cyber Blue
+  0x1c1c22, // Matte Stealth Black
+  0xe8ecf5, // Lunar Holographic White
+  0x2a0052  // Ultra Violet
 ];
 
 const ACCENT_COLORS = [
   0x00ffff, 0xff00aa, 0x00ff88, 0xffea00, 0xff3300, 0xaa00ff
 ];
 
+// High-diffusion FNV-1a Hash + Bit-Avalanche for maximum avatar diversity
 export function generateAvatarProfile(seedStr: string): AvatarProfile {
-  let hash = 0;
+  let h = 0x811c9dc5;
   for (let i = 0; i < seedStr.length; i++) {
-    hash = (hash << 5) - hash + seedStr.charCodeAt(i);
-    hash |= 0;
+    h ^= seedStr.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
   }
-  const rng = (offset: number) => Math.abs((hash ^ (offset * 2654435761)) % 10000) / 10000;
+
+  const rng = (offset: number) => {
+    let s = (h ^ (offset * 0x45d9f3b)) >>> 0;
+    s = ((s >> 16) ^ s) * 0x45d9f3b;
+    s = ((s >> 16) ^ s) * 0x45d9f3b;
+    s = (s >> 16) ^ s;
+    return (s >>> 0) / 4294967296;
+  };
 
   const hairStyles: HairStyle[] = [
     'short_fade', 'messy_spikes', 'curly_afro', 'long_ponytail',
-    'cyber_braids', 'cap_backwards', 'buzzcut'
+    'cyber_braids', 'cap_backwards', 'curtains_parted', 'buzzcut'
   ];
   const eyewearTypes: EyewearType[] = [
-    'cyber_visor', 'neon_shades', 'rave_goggles', 'cat_eye', 'none'
+    'none', 'none', 'none', // 50% natural faces without eyewear
+    'cyber_visor', 'neon_shades', 'rave_goggles'
   ];
   const topStyles: TopStyle[] = [
     'rave_hoodie', 'crop_top', 'lunar_jacket', 'tech_vest', 'cyber_tee'
@@ -77,21 +98,24 @@ export function generateAvatarProfile(seedStr: string): AvatarProfile {
   const skinColor = SKIN_TONES[Math.floor(rng(1) * SKIN_TONES.length)];
   const hairStyle = hairStyles[Math.floor(rng(2) * hairStyles.length)];
   const hairColor = HAIR_COLORS[Math.floor(rng(3) * HAIR_COLORS.length)];
-  const eyewear = eyewearTypes[Math.floor(rng(4) * eyewearTypes.length)];
-  const eyewearColor = ACCENT_COLORS[Math.floor(rng(5) * ACCENT_COLORS.length)];
-  const topStyle = topStyles[Math.floor(rng(6) * topStyles.length)];
-  const topColor = CLOTHES_COLORS[Math.floor(rng(7) * CLOTHES_COLORS.length)];
-  const topAccent = ACCENT_COLORS[Math.floor(rng(8) * ACCENT_COLORS.length)];
-  const bottomStyle = bottomStyles[Math.floor(rng(9) * bottomStyles.length)];
-  const bottomColor = CLOTHES_COLORS[Math.floor(rng(10) * CLOTHES_COLORS.length)];
-  const shoeColor = ACCENT_COLORS[Math.floor(rng(11) * ACCENT_COLORS.length)];
-  const glowColor = ACCENT_COLORS[Math.floor(rng(12) * ACCENT_COLORS.length)];
-  const hasHeadphones = rng(13) > 0.45;
+  const eyeColor = EYE_COLORS[Math.floor(rng(4) * EYE_COLORS.length)];
+  const eyewear = eyewearTypes[Math.floor(rng(5) * eyewearTypes.length)];
+  const eyewearColor = ACCENT_COLORS[Math.floor(rng(6) * ACCENT_COLORS.length)];
+  const topStyle = topStyles[Math.floor(rng(7) * topStyles.length)];
+  const topColor = CLOTHES_COLORS[Math.floor(rng(8) * CLOTHES_COLORS.length)];
+  const topAccent = ACCENT_COLORS[Math.floor(rng(9) * ACCENT_COLORS.length)];
+  const bottomStyle = bottomStyles[Math.floor(rng(10) * bottomStyles.length)];
+  const bottomColor = CLOTHES_COLORS[Math.floor(rng(11) * CLOTHES_COLORS.length)];
+  const shoeColor = ACCENT_COLORS[Math.floor(rng(12) * ACCENT_COLORS.length)];
+  const glowColor = ACCENT_COLORS[Math.floor(rng(13) * ACCENT_COLORS.length)];
+  const hasHeadphones = rng(14) > 0.6;
+  const hasPiercing = rng(15) > 0.65;
 
   return {
     skinColor,
     hairStyle,
     hairColor,
+    eyeColor,
     eyewear,
     eyewearColor,
     topStyle,
@@ -101,7 +125,8 @@ export function generateAvatarProfile(seedStr: string): AvatarProfile {
     bottomColor,
     shoeColor,
     glowColor,
-    hasHeadphones
+    hasHeadphones,
+    hasPiercing
   };
 }
 
@@ -110,9 +135,9 @@ export class Avatar {
   public username: string;
   public container: Container;
 
-  // 5 Dance Floor Tiers
+  // Lane & Transform
   public lane: LaneType;
-  public currentScale: number = 0.5;
+  public currentScale: number = 0.50;
 
   // Position
   public x: number;
@@ -126,20 +151,23 @@ export class Avatar {
   public jumpDuration: number = 1.1;
   public jumpStartX: number = 0;
   public jumpStartY: number = 0;
-  public jumpStartScale: number = 0.5;
-  public jumpTargetScale: number = 0.5;
+  public jumpStartScale: number = 0.50;
+  public jumpTargetScale: number = 0.50;
   public jumpHeight: number = 130;
 
-  // Tier Fallback Timers
-  public likeTierTimer: number = 0; // Tier 3: 60 seconds
-  public giftTierTimer: number = 0; // Tier 2: 10 seconds
-  public vipTimer: number = 0;      // Tier 1: 15 seconds
-  public totalDiamonds: number = 0; // Cumulative gift ranking score
-  public isTop3Vip: boolean = false;
-  public giftStreak: number = 0;
+  // Timers & User Metrics
+  public likeCount: number = 0;      // 50 likes -> character morphs
+  public costumeTimer: number = 0;   // 5 minutes (300s) -> character morphs
+  public likeTierTimer: number = 0;  // Tier 3: 60s
+  public djStageTimer: number = 0;   // DJ Stage VIP: 30s
+  public totalDiamonds: number = 0;  // Cumulative gift diamonds
   public isFollower: boolean = false;
+  public giftStreak: number = 0;
 
-  // Character Visual Model
+  // Dance Style
+  public danceStyle: DanceStyle;
+
+  // Visual Model
   public profile: AvatarProfile;
   private characterContainer: Container;
   private legsGfx: Graphics;
@@ -157,12 +185,14 @@ export class Avatar {
   private speechText: Text;
   private speechTimer: number = 0;
 
-  // VIP FX (Aura & Orbiting Stars)
+  // VIP Aura FX
   private vipGfx: Graphics;
 
   // Animation Phase
   private animPhaseOffset: number;
   private danceSpeed: number;
+  private spinProgress: number = 0;
+  private isSpinning: boolean = false;
 
   constructor(
     id: string,
@@ -180,7 +210,13 @@ export class Avatar {
     this.targetX = x;
     this.targetY = y;
     this.animPhaseOffset = Math.random() * Math.PI * 2;
-    this.danceSpeed = 3.2 + Math.random() * 1.6;
+    this.danceSpeed = 3.0 + Math.random() * 1.8;
+
+    const danceStyles: DanceStyle[] = [
+      'hands_up_rave', 'shuffle_groove', 'headbang_bounce',
+      'hiphop_dab', 'disco_point', 'spin_jump', 'zero_g_float'
+    ];
+    this.danceStyle = danceStyles[Math.floor(Math.random() * danceStyles.length)];
 
     this.profile = profile || generateAvatarProfile(username || id);
 
@@ -199,7 +235,6 @@ export class Avatar {
     this.leftArmGfx = new Graphics();
     this.rightArmGfx = new Graphics();
 
-    // Layering inside character
     this.characterContainer.addChild(this.legsGfx);
     this.characterContainer.addChild(this.torsoGfx);
     this.characterContainer.addChild(this.leftArmGfx);
@@ -207,7 +242,7 @@ export class Avatar {
     this.characterContainer.addChild(this.headGfx);
     this.container.addChild(this.characterContainer);
 
-    // Build the visual graphics once (GPU-efficient!)
+    // Build the detailed human model
     this.buildHumanModel();
 
     // Name Tag
@@ -217,7 +252,7 @@ export class Avatar {
       text: `@${username}`,
       style: new TextStyle({
         fontFamily: 'Orbitron, Arial, sans-serif',
-        fontSize: 15,
+        fontSize: 16,
         fontWeight: 'bold',
         fill: 0xffffff
       })
@@ -236,7 +271,7 @@ export class Avatar {
       text: '',
       style: new TextStyle({
         fontFamily: 'Arial, sans-serif',
-        fontSize: 17,
+        fontSize: 18,
         fontWeight: 'bold',
         fill: 0x050814,
         align: 'center'
@@ -250,46 +285,69 @@ export class Avatar {
     this.updateLaneScale();
   }
 
+  // Update scale according to new 4-tier + DJ Stage system
   public updateLaneScale() {
-    let target = 0.35;
-    if (this.lane === 'tier5_viewer') target = 0.35;
-    else if (this.lane === 'tier4_follower') target = 0.52;
-    else if (this.lane === 'tier3_liker') target = 0.72;
-    else if (this.lane === 'tier2_gifter') target = 0.98;
-    else if (this.lane === 'tier1_vip') target = 1.28;
+    let target = 0.50;
+    if (this.lane === 'tier1_viewer') target = 0.50;      // En arka: 0.50
+    else if (this.lane === 'tier2_follower') target = 0.68; // Bir ön: 0.68
+    else if (this.lane === 'tier3_liker') target = 0.90;    // Bir ön: 0.90
+    else if (this.lane === 'tier4_gifter') target = 1.15;   // En ön: 1.15 (Hediye atanlar kalıcı en önde)
+    else if (this.lane === 'dj_stage') target = 1.35;       // DJ yanı VIP: 1.35
 
     this.currentScale = target;
     this.container.scale.set(this.currentScale);
 
-    // Visual Optimization: In Tiers 4 & 5 hide dense name tags to avoid clutter
-    // Only active interactors (VIP Tier 1, Gifters Tier 2, Likers Tier 3) show prominent name tags
-    this.nameContainer.visible = this.lane === 'tier1_vip' || this.lane === 'tier2_gifter' || this.lane === 'tier3_liker';
+    // Sadece DJ Stage VIP ve En Ön Sıradaki Hediye Atanlar (Tier 4) için isim etiketi gösterilir
+    // Böylece kalabalık dans pisti tertemiz ve net görünür
+    this.nameContainer.visible = this.lane === 'dj_stage' || this.lane === 'tier4_gifter';
   }
 
-  // Draw the human character once with rich variety
+  // Mutate appearance when 50 likes reached or 5 minutes elapsed
+  public mutateCostume(particles?: ParticleSystem) {
+    const salt = `${Date.now()}_${Math.random()}`;
+    this.profile = generateAvatarProfile(this.username + salt);
+    this.buildHumanModel();
+    this.updateNameTag();
+
+    // Sparkle transform FX
+    if (particles) {
+      particles.triggerSmallGift(this.x, this.y, this.profile.glowColor);
+    }
+  }
+
+  // Register like and check 50-like threshold
+  public registerLike(particles?: ParticleSystem) {
+    this.likeCount++;
+    if (this.likeCount % 50 === 0) {
+      this.mutateCostume(particles);
+      this.say(`✨ 50 BEĞENİ! Yeni Stil! ✨`, 4);
+    }
+  }
+
+  // Draw the detailed human character (Face with eyes, eyebrows, nose, mouth, hair, ears, clothes)
   private buildHumanModel() {
     const p = this.profile;
 
-    // 1. LEGS & SHOES (Bottom outfit)
+    // 1. LEGS & PANTS
     const legG = this.legsGfx;
     legG.clear();
 
     const legW = 14;
-    const legH = 40;
+    const legH = 50;
+    const legY = 22;
     const legLeftX = -18;
     const legRightX = 4;
-    const legY = 20;
 
-    // Pants / Bottoms
     if (p.bottomStyle === 'shorts_leggings') {
-      // Dark compression leggings
-      legG.roundRect(legLeftX, legY, legW, legH, 4).fill({ color: 0x111622 });
-      legG.roundRect(legRightX, legY, legW, legH, 4).fill({ color: 0x111622 });
-      // Shorts on top
-      legG.roundRect(legLeftX - 3, legY, legW + 6, 20, 5).fill({ color: p.bottomColor });
-      legG.roundRect(legRightX - 3, legY, legW + 6, 20, 5).fill({ color: p.bottomColor });
+      // Shorts with cyber leggings underneath
+      legG.roundRect(legLeftX, legY, legW, 20, 4).fill({ color: p.bottomColor });
+      legG.roundRect(legRightX, legY, legW, 20, 4).fill({ color: p.bottomColor });
+      legG.roundRect(legLeftX + 1, legY + 20, legW - 2, 30, 2).fill({ color: 0x111622 });
+      legG.roundRect(legRightX + 1, legY + 20, legW - 2, 30, 2).fill({ color: 0x111622 });
+      legG.rect(legLeftX, legY + 36, legW, 2.5).fill({ color: p.glowColor });
+      legG.rect(legRightX, legY + 36, legW, 2.5).fill({ color: p.glowColor });
     } else {
-      // Cargo pants / space joggers
+      // Cargo pants / space joggers / cyber jeans
       legG.roundRect(legLeftX, legY, legW, legH, 5)
         .fill({ color: p.bottomColor })
         .stroke({ width: 1.5, color: 0x111622 });
@@ -297,28 +355,32 @@ export class Avatar {
         .fill({ color: p.bottomColor })
         .stroke({ width: 1.5, color: 0x111622 });
 
-      // Neon side stripes / buckle straps on joggers/cargo
-      if (p.bottomStyle === 'space_joggers' || p.bottomStyle === 'cargo_pants') {
-        legG.rect(legLeftX, legY + 8, 3, 24).fill({ color: p.topAccent });
-        legG.rect(legRightX + legW - 3, legY + 8, 3, 24).fill({ color: p.topAccent });
+      if (p.bottomStyle === 'cargo_pants') {
+        legG.roundRect(legLeftX - 3, legY + 16, 5, 14, 2)
+          .fill({ color: p.bottomColor })
+          .stroke({ width: 1, color: p.glowColor });
+        legG.roundRect(legRightX + legW - 2, legY + 16, 5, 14, 2)
+          .fill({ color: p.bottomColor })
+          .stroke({ width: 1, color: p.glowColor });
+      } else {
+        legG.rect(legLeftX, legY + 22, legW, 2).fill({ color: p.glowColor });
+        legG.rect(legRightX, legY + 22, legW, 2).fill({ color: p.glowColor });
       }
     }
 
-    // High-top Rave Sneakers / Boots
+    // High-top Rave Sneakers with Glowing Neon Soles
     const shoeY = legY + legH - 2;
-    // Left shoe
     legG.roundRect(legLeftX - 5, shoeY, legW + 8, 12, 4)
-      .fill({ color: 0x1b2233 })
+      .fill({ color: 0x1a2233 })
       .stroke({ width: 1.5, color: p.shoeColor });
     legG.rect(legLeftX - 5, shoeY + 9, legW + 8, 3)
-      .fill({ color: p.shoeColor }); // Glowing sole
+      .fill({ color: p.shoeColor });
 
-    // Right shoe
     legG.roundRect(legRightX - 3, shoeY, legW + 8, 12, 4)
-      .fill({ color: 0x1b2233 })
+      .fill({ color: 0x1a2233 })
       .stroke({ width: 1.5, color: p.shoeColor });
     legG.rect(legRightX - 3, shoeY + 9, legW + 8, 3)
-      .fill({ color: p.shoeColor }); // Glowing sole
+      .fill({ color: p.shoeColor });
 
     // 2. TORSO & CLOTHES
     const torsoG = this.torsoGfx;
@@ -329,217 +391,217 @@ export class Avatar {
     const torsoX = -torsoW / 2;
     const torsoY = -26;
 
-    // Mini space/oxygen cyber pack on back (lunar rave aesthetic)
+    // Mini cyber backpack with glowing energy cell
     torsoG.roundRect(torsoX + 6, torsoY - 4, torsoW - 12, torsoH - 6, 8)
       .fill({ color: 0x151c2c })
       .stroke({ width: 1.5, color: p.glowColor, alpha: 0.8 });
-    // Battery glow line
     torsoG.roundRect(torsoX + 16, torsoY + 2, torsoW - 32, 10, 3)
       .fill({ color: p.glowColor, alpha: 0.85 });
 
-    // Main Upper Body Clothes
+    // Upper body tops
     if (p.topStyle === 'crop_top') {
-      // Exposed midriff skin
-      torsoG.roundRect(torsoX + 4, torsoY + 24, torsoW - 8, 18, 4)
-        .fill({ color: p.skinColor });
-      // Crop top
+      torsoG.roundRect(torsoX + 4, torsoY + 24, torsoW - 8, 18, 4).fill({ color: p.skinColor });
       torsoG.roundRect(torsoX + 2, torsoY, torsoW - 4, 26, 8)
         .fill({ color: p.topColor })
         .stroke({ width: 1.5, color: p.topAccent });
-      // Rave straps across chest
       torsoG.moveTo(torsoX + 6, torsoY + 6)
         .lineTo(torsoX + torsoW - 6, torsoY + 20)
         .stroke({ width: 2, color: p.topAccent });
     } else if (p.topStyle === 'tech_vest') {
-      // Inner tee
-      torsoG.roundRect(torsoX + 3, torsoY, torsoW - 6, torsoH, 8)
-        .fill({ color: 0x111622 });
-      // Tactical neon vest
+      torsoG.roundRect(torsoX + 3, torsoY, torsoW - 6, torsoH, 8).fill({ color: 0x111622 });
       torsoG.roundRect(torsoX, torsoY + 2, torsoW, torsoH - 8, 8)
         .fill({ color: p.topColor })
         .stroke({ width: 2, color: p.topAccent });
-      // Glowing tech battery cells on vest
       torsoG.circle(torsoX + 12, torsoY + 18, 4).fill({ color: p.topAccent });
       torsoG.circle(torsoX + torsoW - 12, torsoY + 18, 4).fill({ color: p.topAccent });
     } else if (p.topStyle === 'rave_hoodie') {
-      // Loose hoodie
       torsoG.roundRect(torsoX - 3, torsoY - 2, torsoW + 6, torsoH + 2, 10)
         .fill({ color: p.topColor })
         .stroke({ width: 1.5, color: 0x111622 });
-      // Kangaroo pocket
       torsoG.roundRect(torsoX + 6, torsoY + 24, torsoW - 12, 18, 5)
         .fill({ color: p.topColor })
         .stroke({ width: 1.5, color: p.topAccent });
-      // Glowing drawstrings
       torsoG.rect(torsoX + 16, torsoY + 4, 3, 14).fill({ color: p.topAccent });
       torsoG.rect(torsoX + torsoW - 19, torsoY + 4, 3, 14).fill({ color: p.topAccent });
     } else {
-      // Lunar Jacket / Cyber Tee
       torsoG.roundRect(torsoX, torsoY, torsoW, torsoH, 9)
         .fill({ color: p.topColor })
         .stroke({ width: 2, color: 0x111622 });
-      // Graphic cyber logo on chest
       torsoG.roundRect(torsoX + 12, torsoY + 10, torsoW - 24, 20, 4)
         .fill({ color: 0x111622 })
         .stroke({ width: 1.5, color: p.topAccent });
       torsoG.circle(0, torsoY + 20, 5).fill({ color: p.topAccent });
     }
 
-    // 3. ARMS & HANDS (Left & Right)
-    // Left arm
+    // 3. ARMS & HANDS
     const armW = 10;
     this.leftArmGfx.clear();
     this.leftArmGfx.position.set(-22, torsoY + 6);
     this.leftArmGfx.roundRect(-armW / 2, 0, armW, 36, 5)
       .fill({ color: p.topColor })
       .stroke({ width: 1.5, color: 0x111622 });
-    // Hand (Skin tone + glow wristband)
     this.leftArmGfx.rect(-armW / 2, 26, armW, 3).fill({ color: p.topAccent });
-    this.leftArmGfx.circle(0, 36, 6)
-      .fill({ color: p.skinColor });
+    this.leftArmGfx.circle(0, 36, 6).fill({ color: p.skinColor });
 
-    // Right arm
     this.rightArmGfx.clear();
     this.rightArmGfx.position.set(22, torsoY + 6);
     this.rightArmGfx.roundRect(-armW / 2, 0, armW, 36, 5)
       .fill({ color: p.topColor })
       .stroke({ width: 1.5, color: 0x111622 });
-    // Hand
     this.rightArmGfx.rect(-armW / 2, 26, armW, 3).fill({ color: p.topAccent });
-    this.rightArmGfx.circle(0, 36, 6)
-      .fill({ color: p.skinColor });
+    this.rightArmGfx.circle(0, 36, 6).fill({ color: p.skinColor });
 
-    // 4. HEAD, FACE, HAIR & EYEWEAR
+    // 4. REAL HUMAN HEAD, FACE & FEATURES
+    // Proper Artistic Layering Order:
+    // 1) Neck & Neck Headphones
+    // 2) Hair Back / Volume
+    // 3) Head / Face Skin Base
+    // 4) Ears & Piercings
+    // 5) Blush, Nose, Mouth (Teeth)
+    // 6) Eyes (Sclera, Iris, Pupil, Catchlight, Eyelashes)
+    // 7) Eyebrows
+    // 8) Hair Front Bangs / Fringe (neatly above eyes)
+    // 9) Eyewear (Visor / Shades / Goggles)
     const headG = this.headGfx;
     headG.clear();
 
-    const headCenterY = -48;
+    const headCenterY = -50;
     const headR = 19;
 
-    // Neck
+    // 1) Neck
     headG.rect(-6, headCenterY + 14, 12, 10).fill({ color: p.skinColor });
 
     // Headphones around neck if equipped
     if (p.hasHeadphones) {
-      headG.ellipse(0, headCenterY + 16, 21, 9)
-        .stroke({ width: 5, color: p.glowColor });
-      headG.roundRect(-24, headCenterY + 11, 8, 12, 3)
+      headG.ellipse(0, headCenterY + 16, 22, 9).stroke({ width: 5, color: p.glowColor });
+      headG.roundRect(-25, headCenterY + 11, 8, 12, 3)
         .fill({ color: 0x111622 })
         .stroke({ width: 1.5, color: p.glowColor });
-      headG.roundRect(16, headCenterY + 11, 8, 12, 3)
+      headG.roundRect(17, headCenterY + 11, 8, 12, 3)
         .fill({ color: 0x111622 })
         .stroke({ width: 1.5, color: p.glowColor });
     }
 
-    // Human Head / Face Base
-    headG.ellipse(0, headCenterY, headR - 1, headR + 2)
-      .fill({ color: p.skinColor })
-      .stroke({ width: 1.5, color: 0x221a14 });
-
-    // Human Eyes (if no full visor)
-    if (p.eyewear === 'none' || p.eyewear === 'neon_shades' || p.eyewear === 'cat_eye') {
-      // Left eye
-      headG.ellipse(-7, headCenterY - 1, 3.5, 2.5).fill({ color: 0xffffff });
-      headG.circle(-6.5, headCenterY - 1, 1.8).fill({ color: 0x241810 });
-      // Right eye
-      headG.ellipse(7, headCenterY - 1, 3.5, 2.5).fill({ color: 0xffffff });
-      headG.circle(6.5, headCenterY - 1, 1.8).fill({ color: 0x241810 });
-
-      // Eyebrows
-      headG.rect(-10, headCenterY - 6, 6, 1.8).fill({ color: p.hairColor });
-      headG.rect(4, headCenterY - 6, 6, 1.8).fill({ color: p.hairColor });
-
-      // Subtle smile
-      headG.ellipse(0, headCenterY + 8, 4, 2).stroke({ width: 1.5, color: 0x5a2d1d });
-    }
-
-    // Eyewear
-    if (p.eyewear === 'cyber_visor') {
-      // Daft Punk style horizontal glowing visor
-      headG.roundRect(-16, headCenterY - 4, 32, 10, 4)
-        .fill({ color: 0x05070e })
-        .stroke({ width: 2, color: p.eyewearColor });
-      headG.rect(-13, headCenterY - 1, 26, 4)
-        .fill({ color: p.eyewearColor });
-    } else if (p.eyewear === 'neon_shades') {
-      // Cool dark shades with glowing rims
-      headG.roundRect(-15, headCenterY - 4, 13, 8, 2)
-        .fill({ color: 0x08080c })
-        .stroke({ width: 1.5, color: p.eyewearColor });
-      headG.roundRect(2, headCenterY - 4, 13, 8, 2)
-        .fill({ color: 0x08080c })
-        .stroke({ width: 1.5, color: p.eyewearColor });
-      headG.rect(-2, headCenterY - 2, 4, 2).fill({ color: p.eyewearColor });
-    } else if (p.eyewear === 'rave_goggles') {
-      // Cyber goggles with glowing twin lenses
-      headG.circle(-8, headCenterY - 2, 7)
-        .fill({ color: 0x111625 })
-        .stroke({ width: 2, color: p.eyewearColor });
-      headG.circle(-8, headCenterY - 2, 4)
-        .fill({ color: p.eyewearColor, alpha: 0.9 });
-
-      headG.circle(8, headCenterY - 2, 7)
-        .fill({ color: 0x111625 })
-        .stroke({ width: 2, color: p.eyewearColor });
-      headG.circle(8, headCenterY - 2, 4)
-        .fill({ color: p.eyewearColor, alpha: 0.9 });
-    } else if (p.eyewear === 'cat_eye') {
-      // Sharp cat eye rave frames
-      headG.moveTo(-16, headCenterY - 5)
-        .lineTo(-1, headCenterY - 1)
-        .lineTo(-3, headCenterY + 4)
-        .lineTo(-15, headCenterY + 1)
-        .closePath()
-        .fill({ color: 0x090d18 })
-        .stroke({ width: 1.5, color: p.eyewearColor });
-      headG.moveTo(16, headCenterY - 5)
-        .lineTo(1, headCenterY - 1)
-        .lineTo(3, headCenterY + 4)
-        .lineTo(15, headCenterY + 1)
-        .closePath()
-        .fill({ color: 0x090d18 })
-        .stroke({ width: 1.5, color: p.eyewearColor });
-    }
-
-    // Hair Styles
-    const hairY = headCenterY - 12;
+    // 2) Hair Back / Crown Volume
+    const hairTopY = headCenterY - 14;
     if (p.hairStyle === 'curly_afro') {
-      // Full afro puff
-      headG.circle(0, hairY - 3, 21).fill({ color: p.hairColor });
-      headG.circle(-12, hairY - 2, 11).fill({ color: p.hairColor });
-      headG.circle(12, hairY - 2, 11).fill({ color: p.hairColor });
+      headG.circle(0, hairTopY - 3, 23).fill({ color: p.hairColor });
+      headG.circle(-14, hairTopY, 15).fill({ color: p.hairColor });
+      headG.circle(14, hairTopY, 15).fill({ color: p.hairColor });
     } else if (p.hairStyle === 'messy_spikes') {
-      // Spiky anime rave hair
-      headG.circle(0, hairY, 17).fill({ color: p.hairColor });
-      // Spikes
-      headG.moveTo(-14, hairY - 2).lineTo(-18, hairY - 16).lineTo(-8, hairY - 8).fill({ color: p.hairColor });
-      headG.moveTo(-8, hairY - 8).lineTo(-4, hairY - 20).lineTo(4, hairY - 8).fill({ color: p.hairColor });
-      headG.moveTo(4, hairY - 8).lineTo(14, hairY - 18).lineTo(12, hairY - 2).fill({ color: p.hairColor });
+      headG.circle(0, hairTopY, 19).fill({ color: p.hairColor });
+      headG.moveTo(-16, hairTopY - 2).lineTo(-21, hairTopY - 16).lineTo(-10, hairTopY - 8).fill({ color: p.hairColor });
+      headG.moveTo(-10, hairTopY - 8).lineTo(-4, hairTopY - 21).lineTo(4, hairTopY - 8).fill({ color: p.hairColor });
+      headG.moveTo(4, hairTopY - 8).lineTo(15, hairTopY - 19).lineTo(14, hairTopY - 2).fill({ color: p.hairColor });
     } else if (p.hairStyle === 'long_ponytail') {
-      // Hair on top
-      headG.circle(0, hairY, 17).fill({ color: p.hairColor });
-      // Flowing ponytail to the left/back
-      headG.roundRect(-24, hairY - 4, 12, 32, 6).fill({ color: p.hairColor });
-      headG.circle(-18, hairY + 28, 5).fill({ color: p.hairColor });
+      headG.circle(0, hairTopY, 19).fill({ color: p.hairColor });
+      headG.roundRect(-25, hairTopY - 2, 12, 36, 6).fill({ color: p.hairColor });
+      headG.circle(-19, hairTopY + 32, 5).fill({ color: p.hairColor });
     } else if (p.hairStyle === 'cyber_braids') {
-      // Braids with neon beads
-      headG.circle(0, hairY, 16).fill({ color: p.hairColor });
-      // Braids dropping on sides
-      headG.roundRect(-19, hairY + 2, 5, 24, 2).fill({ color: p.hairColor });
-      headG.rect(-19, hairY + 20, 5, 3).fill({ color: p.topAccent }); // Neon bead
-      headG.roundRect(14, hairY + 2, 5, 24, 2).fill({ color: p.hairColor });
-      headG.rect(14, hairY + 20, 5, 3).fill({ color: p.topAccent }); // Neon bead
+      headG.circle(0, hairTopY, 18).fill({ color: p.hairColor });
+      headG.roundRect(-20, hairTopY + 2, 5, 26, 2).fill({ color: p.hairColor });
+      headG.rect(-20, hairTopY + 22, 5, 3).fill({ color: p.topAccent });
+      headG.roundRect(15, hairTopY + 2, 5, 26, 2).fill({ color: p.hairColor });
+      headG.rect(15, hairTopY + 22, 5, 3).fill({ color: p.topAccent });
     } else if (p.hairStyle === 'cap_backwards') {
-      // Backwards streetwear cap
-      headG.roundRect(-18, hairY - 4, 36, 16, 8)
+      headG.roundRect(-18, hairTopY - 5, 36, 17, 8)
         .fill({ color: p.topColor })
         .stroke({ width: 1.5, color: p.topAccent });
-      // Backwards brim
-      headG.roundRect(-14, hairY + 8, 28, 5, 2)
-        .fill({ color: p.topAccent });
+      headG.roundRect(-14, hairTopY + 8, 28, 5, 2).fill({ color: p.topAccent });
+    } else if (p.hairStyle === 'curtains_parted') {
+      headG.circle(0, hairTopY, 19).fill({ color: p.hairColor });
     } else {
       // Short fade / buzzcut
-      headG.circle(0, hairY + 2, 17).fill({ color: p.hairColor });
+      headG.circle(0, hairTopY + 1, 19).fill({ color: p.hairColor });
+    }
+
+    // 3) Head Base (Natural Skin)
+    headG.ellipse(0, headCenterY, headR, headR + 3)
+      .fill({ color: p.skinColor })
+      .stroke({ width: 1.5, color: 0x1a120c });
+
+    // 4) Human Ears & Piercings
+    headG.ellipse(-headR - 1, headCenterY, 3.5, 6.5).fill({ color: p.skinColor });
+    headG.ellipse(headR + 1, headCenterY, 3.5, 6.5).fill({ color: p.skinColor });
+    if (p.hasPiercing) {
+      headG.circle(-headR - 2, headCenterY + 4, 1.8).fill({ color: 0xffd700 });
+      headG.circle(headR + 2, headCenterY + 4, 1.8).fill({ color: 0xffd700 });
+    }
+
+    // 5) Cute Rosy Cheeks / Blush
+    headG.circle(-10, headCenterY + 4, 4.5).fill({ color: 0xff4d6d, alpha: 0.28 });
+    headG.circle(10, headCenterY + 4, 4.5).fill({ color: 0xff4d6d, alpha: 0.28 });
+
+    // Expressive Human Nose Bridge & Tip
+    headG.moveTo(-1, headCenterY - 2)
+      .lineTo(1, headCenterY + 3)
+      .lineTo(-1, headCenterY + 4)
+      .stroke({ width: 1.5, color: 0x5a331d, alpha: 0.65 });
+
+    // Expressive Smiling Mouth with teeth/lips
+    headG.moveTo(-6, headCenterY + 8.5)
+      .quadraticCurveTo(0, headCenterY + 14.5, 6, headCenterY + 8.5)
+      .fill({ color: 0x4a1818 })
+      .stroke({ width: 1.8, color: 0x3d1414 });
+    // White teeth smile
+    headG.roundRect(-4, headCenterY + 8.5, 8, 3, 1).fill({ color: 0xffffff });
+
+    // 6) Human Eyes (Always crisp, sparkling, clear!)
+    // Left Eye
+    headG.ellipse(-8, headCenterY - 2, 4.5, 3.2).fill({ color: 0xffffff });
+    headG.circle(-7.5, headCenterY - 2, 2.5).fill({ color: p.eyeColor });
+    headG.circle(-7.5, headCenterY - 2, 1.4).fill({ color: 0x050505 });
+    headG.circle(-6.5, headCenterY - 3, 1).fill({ color: 0xffffff });
+    headG.ellipse(-8, headCenterY - 4.5, 4.5, 1.3).fill({ color: 0x111111 });
+
+    // Right Eye
+    headG.ellipse(8, headCenterY - 2, 4.5, 3.2).fill({ color: 0xffffff });
+    headG.circle(8.5, headCenterY - 2, 2.5).fill({ color: p.eyeColor });
+    headG.circle(8.5, headCenterY - 2, 1.4).fill({ color: 0x050505 });
+    headG.circle(9.5, headCenterY - 3, 1).fill({ color: 0xffffff });
+    headG.ellipse(8, headCenterY - 4.5, 4.5, 1.3).fill({ color: 0x111111 });
+
+    // 7) Expressive Eyebrows
+    headG.moveTo(-12, headCenterY - 7)
+      .quadraticCurveTo(-7, headCenterY - 9.5, -3, headCenterY - 7)
+      .stroke({ width: 2.2, color: p.hairColor, cap: 'round' });
+
+    headG.moveTo(3, headCenterY - 7)
+      .quadraticCurveTo(7, headCenterY - 9.5, 12, headCenterY - 7)
+      .stroke({ width: 2.2, color: p.hairColor, cap: 'round' });
+
+    // 8) Front Hair Framing / Fringe (Positioned neatly above eyebrows, not covering eyes)
+    if (p.hairStyle === 'curtains_parted') {
+      headG.roundRect(-17, hairTopY + 4, 7, 10, 3).fill({ color: p.hairColor });
+      headG.roundRect(10, hairTopY + 4, 7, 10, 3).fill({ color: p.hairColor });
+    } else if (p.hairStyle === 'cap_backwards') {
+      headG.moveTo(-9, hairTopY + 8).lineTo(-5, hairTopY + 12).lineTo(0, hairTopY + 8).fill({ color: p.hairColor });
+      headG.moveTo(0, hairTopY + 8).lineTo(5, hairTopY + 12).lineTo(9, hairTopY + 8).fill({ color: p.hairColor });
+    }
+
+    // 9) Eyewear (Placed over eyes if equipped)
+    if (p.eyewear === 'cyber_visor') {
+      headG.roundRect(-16, headCenterY - 6.5, 32, 9, 3.5)
+        .fill({ color: 0x05070e, alpha: 0.88 })
+        .stroke({ width: 2, color: p.eyewearColor });
+      headG.rect(-13, headCenterY - 4, 26, 3.5).fill({ color: p.eyewearColor, alpha: 0.9 });
+    } else if (p.eyewear === 'neon_shades') {
+      headG.roundRect(-15, headCenterY - 5.5, 13, 7.5, 2)
+        .fill({ color: 0x08080c, alpha: 0.82 })
+        .stroke({ width: 1.5, color: p.eyewearColor });
+      headG.roundRect(2, headCenterY - 5.5, 13, 7.5, 2)
+        .fill({ color: 0x08080c, alpha: 0.82 })
+        .stroke({ width: 1.5, color: p.eyewearColor });
+      headG.rect(-2, headCenterY - 3.5, 4, 2).fill({ color: p.eyewearColor });
+    } else if (p.eyewear === 'rave_goggles') {
+      headG.circle(-8, headCenterY - 3, 6.5)
+        .fill({ color: 0x111625 })
+        .stroke({ width: 2, color: p.eyewearColor });
+      headG.circle(-8, headCenterY - 3, 3.8).fill({ color: p.eyewearColor, alpha: 0.85 });
+      headG.circle(8, headCenterY - 3, 6.5)
+        .fill({ color: 0x111625 })
+        .stroke({ width: 2, color: p.eyewearColor });
+      headG.circle(8, headCenterY - 3, 3.8).fill({ color: p.eyewearColor, alpha: 0.85 });
     }
   }
 
@@ -548,7 +610,9 @@ export class Avatar {
     const textHeight = 24;
 
     this.nameBg.clear();
-    const borderColor = this.isTop3Vip ? 0xffea00 : this.lane === 'tier2_gifter' ? 0xff00bb : 0x00e5ff;
+    const isVip = this.lane === 'dj_stage';
+    const isGifter = this.lane === 'tier4_gifter';
+    const borderColor = isVip ? 0xffea00 : isGifter ? 0xff00bb : 0x00e5ff;
 
     this.nameBg
       .roundRect(-textWidth / 2, -textHeight / 2, textWidth, textHeight, 10)
@@ -562,15 +626,19 @@ export class Avatar {
     this.nameContainer.y = 78;
   }
 
-  // Comic speech bubble
+  // Comic speech bubble (High-contrast, positioned cleanly above the head)
   public say(message: string, duration: number = 4.5) {
     this.speechText.text = message;
-    const paddingX = 20;
-    const paddingY = 14;
-    const bw = Math.max(75, this.speechText.width + paddingX * 2);
-    const bh = Math.max(42, this.speechText.height + paddingY * 2);
+    const paddingX = 22;
+    const paddingY = 15;
+    const bw = Math.max(80, this.speechText.width + paddingX * 2);
+    const bh = Math.max(44, this.speechText.height + paddingY * 2);
 
     this.speechBubbleGfx.clear();
+
+    const isVip = this.lane === 'dj_stage';
+    const isGifter = this.lane === 'tier4_gifter';
+    const strokeColor = isVip ? 0xffea00 : isGifter ? 0xff00bb : 0x00d4ff;
 
     // Drop shadow
     this.speechBubbleGfx
@@ -578,7 +646,6 @@ export class Avatar {
       .fill({ color: 0x000000, alpha: 0.45 });
 
     // Bubble body
-    const strokeColor = this.isTop3Vip ? 0xffea00 : this.lane === 'tier2_gifter' ? 0xff00bb : 0x00d4ff;
     this.speechBubbleGfx
       .roundRect(-bw / 2, -bh - 97, bw, bh, 12)
       .fill({ color: 0xf5f8ff })
@@ -605,7 +672,7 @@ export class Avatar {
     this.speechTimer = duration;
   }
 
-  // Parabolic Low-G arc jump to new position & tier
+  // Jump to new lane & coordinates
   public jumpTo(targetX: number, targetY: number, newLane: LaneType, duration: number = 1.1) {
     this.isJumping = true;
     this.jumpProgress = 0;
@@ -618,19 +685,26 @@ export class Avatar {
     this.jumpStartScale = this.currentScale;
     this.lane = newLane;
 
-    let targetS = 0.35;
-    if (newLane === 'tier5_viewer') targetS = 0.35;
-    else if (newLane === 'tier4_follower') targetS = 0.52;
-    else if (newLane === 'tier3_liker') targetS = 0.72;
-    else if (newLane === 'tier2_gifter') targetS = 0.98;
-    else if (newLane === 'tier1_vip') targetS = 1.28;
+    let targetS = 0.50;
+    if (newLane === 'tier1_viewer') targetS = 0.50;
+    else if (newLane === 'tier2_follower') targetS = 0.68;
+    else if (newLane === 'tier3_liker') targetS = 0.90;
+    else if (newLane === 'tier4_gifter') targetS = 1.15;
+    else if (newLane === 'dj_stage') targetS = 1.35;
 
     this.jumpTargetScale = targetS;
     this.jumpHeight = Math.abs(targetY - this.y) * 0.35 + 90;
   }
 
   public update(dt: number, time: number, kickIntensity: number, particles: ParticleSystem) {
-    // 1. Jump Physics (Parabolic arc)
+    // 1. 5-Minute Costume Auto-Mutation
+    this.costumeTimer += dt;
+    if (this.costumeTimer >= 300) {
+      this.costumeTimer = 0;
+      this.mutateCostume(particles);
+    }
+
+    // 2. Jump Physics (Parabolic arc)
     if (this.isJumping) {
       this.jumpProgress += dt / this.jumpDuration;
 
@@ -642,8 +716,7 @@ export class Avatar {
         this.currentScale = this.jumpTargetScale;
         this.updateLaneScale();
 
-        // Landing dust effect
-        if (this.lane === 'tier1_vip' || this.lane === 'tier2_gifter') {
+        if (this.lane === 'dj_stage' || this.lane === 'tier4_gifter') {
           particles.triggerSmallGift(this.x, this.y + 35 * this.currentScale, this.profile.glowColor);
         }
       } else {
@@ -658,19 +731,13 @@ export class Avatar {
         this.currentScale = this.jumpStartScale + (this.jumpTargetScale - this.jumpStartScale) * p;
         this.container.scale.set(this.currentScale);
 
-        // Jetpack thruster sparks during jump
-        if (Math.random() < 0.45 && (this.lane === 'tier1_vip' || this.lane === 'tier2_gifter' || this.lane === 'tier3_liker')) {
-          particles.emitJetpackThruster(
-            this.x,
-            this.y + 15 * this.currentScale,
-            this.profile.glowColor,
-            1
-          );
+        if (Math.random() < 0.4 && (this.lane === 'dj_stage' || this.lane === 'tier4_gifter')) {
+          particles.emitJetpackThruster(this.x, this.y + 15 * this.currentScale, this.profile.glowColor, 1);
         }
       }
     }
 
-    // 2. Speech Bubble Timer
+    // 3. Speech Bubble Timer
     if (this.speechTimer > 0) {
       this.speechTimer -= dt;
       if (this.speechTimer < 0.5) {
@@ -682,79 +749,119 @@ export class Avatar {
       }
     }
 
-    // 3. Low-G Dance Movement (GPU Matrix Translation - ZERO DRAW CALLS!)
+    // 4. Multiple Distinct Dance Animations & Figures
     this.container.x = this.x;
     this.container.y = this.y;
 
     const phase = time * this.danceSpeed + this.animPhaseOffset;
     let bounce = 0;
     let sway = 0;
-    let armRot = 0;
+    let leftArmRot = 0;
+    let rightArmRot = 0;
 
-    if (this.lane === 'tier1_vip') {
-      // High-energy VIP dance with hands in the air!
-      bounce = -Math.abs(Math.sin(phase * 1.5)) * 26 * (0.8 + kickIntensity * 0.5);
-      sway = Math.sin(phase * 0.75) * 0.12;
-      armRot = 2.4 + Math.sin(phase * 1.5) * 0.45;
-    } else if (this.lane === 'tier2_gifter') {
-      // Excited gifter dance with hands waving!
-      bounce = -Math.abs(Math.sin(phase * 1.3)) * 18 * (0.7 + kickIntensity * 0.4);
-      sway = Math.sin(phase * 0.65) * 0.08;
-      armRot = 1.9 + Math.sin(phase * 1.3) * 0.35;
-    } else if (this.lane === 'tier3_liker') {
-      // Liker bounce with heart rhythm
-      bounce = -Math.abs(Math.sin(phase * 1.1)) * 14 * (0.6 + kickIntensity * 0.4);
-      sway = Math.sin(phase * 0.5) * 0.06;
-      armRot = Math.sin(phase * 1.1) * 0.4;
-    } else if (this.lane === 'tier4_follower') {
-      // Follower rhythm bounce
-      bounce = -Math.abs(Math.sin(phase)) * 10 * (0.5 + kickIntensity * 0.3);
-      sway = Math.sin(phase * 0.4) * 0.05;
-      armRot = Math.sin(phase) * 0.3;
-    } else {
-      // Tier 5 (Ambient lurkers: gentle sway)
-      bounce = -Math.abs(Math.sin(phase * 0.8)) * 6;
-      sway = Math.sin(phase * 0.3) * 0.03;
-      armRot = Math.sin(phase * 0.8) * 0.15;
+    // Trigger spin jump on heavy beat occasionally
+    if (kickIntensity > 0.85 && Math.random() < 0.04 && !this.isSpinning) {
+      this.isSpinning = true;
+      this.spinProgress = 0;
+    }
+    if (this.isSpinning) {
+      this.spinProgress += dt * 5;
+      this.characterContainer.rotation = this.spinProgress * Math.PI * 2;
+      if (this.spinProgress >= 1) {
+        this.isSpinning = false;
+        this.characterContainer.rotation = 0;
+      }
     }
 
-    this.characterContainer.y = bounce;
-    this.characterContainer.rotation = sway;
-    this.leftArmGfx.rotation = armRot;
-    this.rightArmGfx.rotation = -armRot;
+    if (this.lane === 'dj_stage') {
+      // High-energy DJ Stage VIP Dance
+      bounce = -Math.abs(Math.sin(phase * 1.6)) * 28 * (0.8 + kickIntensity * 0.6);
+      sway = Math.sin(phase * 0.8) * 0.14;
+      leftArmRot = 2.4 + Math.sin(phase * 1.6) * 0.5;
+      rightArmRot = -2.4 - Math.sin(phase * 1.6) * 0.5;
+    } else if (this.lane === 'tier4_gifter') {
+      // Front row gifter celebration dance
+      bounce = -Math.abs(Math.sin(phase * 1.4)) * 22 * (0.7 + kickIntensity * 0.5);
+      sway = Math.sin(phase * 0.7) * 0.10;
+      leftArmRot = 2.0 + Math.sin(phase * 1.4) * 0.4;
+      rightArmRot = -2.0 - Math.sin(phase * 1.4) * 0.4;
+    } else {
+      // Dance Style routines across general crowd:
+      if (this.danceStyle === 'hands_up_rave') {
+        bounce = -Math.abs(Math.sin(phase * 1.2)) * 16 * (0.7 + kickIntensity * 0.4);
+        sway = Math.sin(phase * 0.6) * 0.08;
+        leftArmRot = 2.2 + Math.sin(phase * 1.2) * 0.35;
+        rightArmRot = -2.2 - Math.sin(phase * 1.2) * 0.35;
+      } else if (this.danceStyle === 'shuffle_groove') {
+        bounce = -Math.abs(Math.sin(phase * 1.5)) * 12;
+        sway = Math.sin(phase * 1.5) * 0.12;
+        leftArmRot = Math.sin(phase * 1.5) * 0.6;
+        rightArmRot = Math.cos(phase * 1.5) * 0.6;
+      } else if (this.danceStyle === 'headbang_bounce') {
+        bounce = -Math.abs(Math.sin(phase * 1.8)) * 18 * (0.8 + kickIntensity * 0.4);
+        sway = Math.sin(phase * 0.9) * 0.04;
+        this.headGfx.y = Math.sin(phase * 1.8) * 5;
+        leftArmRot = 0.5 + Math.sin(phase * 1.8) * 0.4;
+        rightArmRot = -0.5 - Math.sin(phase * 1.8) * 0.4;
+      } else if (this.danceStyle === 'hiphop_dab') {
+        bounce = -Math.abs(Math.sin(phase)) * 14;
+        sway = Math.sin(phase * 0.5) * 0.07;
+        leftArmRot = 1.4 + Math.sin(phase) * 0.3;
+        rightArmRot = -0.6 + Math.sin(phase) * 0.3;
+      } else if (this.danceStyle === 'disco_point') {
+        bounce = -Math.abs(Math.sin(phase * 1.1)) * 15;
+        sway = Math.sin(phase * 0.55) * 0.08;
+        const toggle = Math.sin(phase * 0.5) > 0;
+        leftArmRot = toggle ? 2.3 : -0.2;
+        rightArmRot = toggle ? 0.2 : -2.3;
+      } else {
+        // Zero-G float & sway
+        bounce = Math.sin(phase * 0.7) * 10;
+        sway = Math.sin(phase * 0.35) * 0.05;
+        leftArmRot = Math.sin(phase * 0.7) * 0.4;
+        rightArmRot = -Math.sin(phase * 0.7) * 0.4;
+      }
+    }
 
-    // 4. VIP Podium Aura & Orbiting Stars (Tier 1 & Tier 2)
+    if (!this.isSpinning) {
+      this.characterContainer.rotation = sway;
+    }
+    this.characterContainer.y = bounce;
+    this.leftArmGfx.rotation = leftArmRot;
+    this.rightArmGfx.rotation = rightArmRot;
+
+    // 5. VIP Effects
     this.renderVipEffects(time, kickIntensity);
   }
 
   private renderVipEffects(time: number, kick: number) {
     this.vipGfx.clear();
 
-    if (this.lane === 'tier1_vip') {
-      // Golden Floor Ring
-      const ringR = 56 + kick * 10;
+    if (this.lane === 'dj_stage') {
+      // Golden VIP Podium Spotlight & Ring
+      const ringR = 60 + kick * 10;
       this.vipGfx
-        .ellipse(0, 72, ringR, ringR * 0.35)
+        .ellipse(0, 75, ringR, ringR * 0.35)
         .stroke({ width: 3.5, color: 0xffea00, alpha: 0.95 });
       this.vipGfx
-        .ellipse(0, 72, ringR * 0.7, ringR * 0.25)
+        .ellipse(0, 75, ringR * 0.7, ringR * 0.25)
         .stroke({ width: 2, color: 0xff00bb, alpha: 0.85 });
 
       // Orbiting Golden Stars
       for (let i = 0; i < 4; i++) {
         const ang = time * 3.5 + (i * Math.PI * 2) / 4;
-        const sx = Math.cos(ang) * 52;
-        const sy = -48 + Math.sin(ang) * 20;
+        const sx = Math.cos(ang) * 54;
+        const sy = -50 + Math.sin(ang) * 20;
 
         this.vipGfx.circle(sx, sy, 4.5).fill({ color: 0xffea00 });
         this.vipGfx.moveTo(sx - 7, sy).lineTo(sx + 7, sy).stroke({ width: 1.5, color: 0xffffff });
         this.vipGfx.moveTo(sx, sy - 7).lineTo(sx, sy + 7).stroke({ width: 1.5, color: 0xffffff });
       }
-    } else if (this.lane === 'tier2_gifter') {
-      // Neon Magenta Floor Ring
-      const ringR = 45 + kick * 6;
+    } else if (this.lane === 'tier4_gifter') {
+      // Permanent front row Gifter Neon Ring
+      const ringR = 48 + kick * 6;
       this.vipGfx
-        .ellipse(0, 68, ringR, ringR * 0.32)
+        .ellipse(0, 70, ringR, ringR * 0.32)
         .stroke({ width: 2.5, color: 0xff00bb, alpha: 0.85 });
     }
   }

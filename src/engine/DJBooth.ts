@@ -1,5 +1,7 @@
 import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 
+export type DJAnimState = 'hands_up_rave' | 'turntable_scratch' | 'hype_crowd' | 'point_vip' | 'headphone_cue';
+
 export class DJBooth {
   public container: Container;
   private boothGraphics: Graphics;
@@ -12,6 +14,11 @@ export class DJBooth {
   private djBackText: Text;
   private time: number = 0;
   private turntableRotation: number = 0;
+
+  // Dynamic DJ Animation States
+  public animState: DJAnimState = 'hands_up_rave';
+  private stateTimer: number = 0;
+  private stateDuration: number = 7.0; // Switches move every ~7 seconds
 
   constructor() {
     this.container = new Container();
@@ -53,7 +60,7 @@ export class DJBooth {
     this.djSignText.y = 1520;
     this.container.addChild(this.djSignText);
 
-    // 5. Animated DJ Astronaut (Back view)
+    // 5. Animated DJ Character (Back view with dynamic moves)
     this.djCharacter = new Graphics();
     this.container.addChild(this.djCharacter);
 
@@ -84,6 +91,23 @@ export class DJBooth {
     this.time += dt;
     this.turntableRotation += dt * 4;
 
+    // Cycle DJ animation states
+    this.stateTimer += dt;
+    if (this.stateTimer >= this.stateDuration) {
+      this.stateTimer = 0;
+      this.stateDuration = 6.0 + Math.random() * 3.0;
+      const states: DJAnimState[] = [
+        'hands_up_rave',
+        'turntable_scratch',
+        'hype_crowd',
+        'point_vip',
+        'headphone_cue'
+      ];
+      // Pick next state different from current
+      const nextStates = states.filter(s => s !== this.animState);
+      this.animState = nextStates[Math.floor(Math.random() * nextStates.length)];
+    }
+
     this.renderSpeakers(kickIntensity);
     this.renderBooth(kickIntensity);
     this.renderDJCharacter(kickIntensity, beatPhase);
@@ -91,7 +115,7 @@ export class DJBooth {
   }
 
   private renderSpeakers(kick: number) {
-    // Left Speaker Tower (x: 0..190, y: 1410..1920)
+    // Left Speaker Tower (x: 10..190, y: 1420..1900)
     const drawTower = (g: Graphics, x: number, isLeft: boolean) => {
       g.clear();
       const w = 180;
@@ -150,7 +174,7 @@ export class DJBooth {
     this.boothGraphics.clear();
 
     // 1. Perspective angled wing consoles on bottom-left and bottom-right
-    // Bottom-left angled DJ console (x: 0..300, y: 1740..1920)
+    // Bottom-left angled DJ console (x: 0..310, y: 1720..1920)
     this.boothGraphics
       .moveTo(0, 1720)
       .lineTo(310, 1770)
@@ -168,7 +192,7 @@ export class DJBooth {
     }
     this.boothGraphics.stroke({ width: 2.5, color: 0x00ffcc, alpha: 0.85 });
 
-    // Bottom-right angled DJ console (x: 770..1080, y: 1740..1920)
+    // Bottom-right angled DJ console (x: 770..1080, y: 1720..1920)
     this.boothGraphics
       .moveTo(1080, 1720)
       .lineTo(770, 1770)
@@ -187,8 +211,7 @@ export class DJBooth {
       .ellipse(930, 1840, 35, 17)
       .fill({ color: 0x00e5ff, alpha: 0.6 });
 
-    // 2. Central DJ Desk Structure
-    // Trapezoidal desk body (x: 240..840, y: 1540..1860)
+    // 2. Central DJ Desk Structure (Trapezoid x: 240..840, y: 1540..1820)
     this.boothGraphics
       .moveTo(310, 1550)
       .lineTo(770, 1550)
@@ -218,20 +241,23 @@ export class DJBooth {
     }
 
     // Two Glowing Turntables / Jog Wheels on central desk
-    // Left Deck
+    // Left Deck (Turntable 1)
     this.boothGraphics
       .ellipse(390, 1615, 60, 26)
       .fill({ color: 0x090d18 })
       .stroke({ width: 3, color: 0xff00bb, alpha: 0.9 });
-    // Turntable rotating marker
-    const rotX = Math.cos(this.turntableRotation) * 45;
-    const rotY = Math.sin(this.turntableRotation) * 19;
+
+    // Turntable rotating marker (or scratch oscillation if scratching)
+    const scratchMod = this.animState === 'turntable_scratch' ? Math.sin(this.time * 24) * 0.8 : 0;
+    const curRot = this.turntableRotation + scratchMod;
+    const rotX = Math.cos(curRot) * 45;
+    const rotY = Math.sin(curRot) * 19;
     this.boothGraphics
       .moveTo(390, 1615)
       .lineTo(390 + rotX, 1615 + rotY)
       .stroke({ width: 2.5, color: 0xffffff });
 
-    // Right Deck
+    // Right Deck (Turntable 2)
     this.boothGraphics
       .ellipse(690, 1615, 60, 26)
       .fill({ color: 0x090d18 })
@@ -260,12 +286,11 @@ export class DJBooth {
     this.djCharacter.clear();
 
     // DJ Astronaut coordinates: x: 540, base y: 1680
-    // Animated bounce on beat
     const bounceY = -Math.abs(Math.sin(beatPhase * Math.PI)) * 14 * (0.8 + kick * 0.6);
-    const armRaise = Math.sin(this.time * 4) * 15;
-    const headTilt = Math.sin(this.time * 2.5) * 4;
+    const bodySway = Math.sin(this.time * 3) * 6;
+    let headTilt = Math.sin(this.time * 2.5) * 4;
 
-    const djX = 540;
+    const djX = 540 + bodySway;
     const djY = 1680 + bounceY;
 
     // 1. Legs / boots
@@ -292,22 +317,24 @@ export class DJBooth {
       .fill({ color: 0x51638b })
       .stroke({ width: 3, color: 0x1f2638 });
 
-    // Cyber DJ Jacket Back Plate with glowing border for "AvokadoBey"
+    // Cyber DJ Jacket Back Plate with glowing border for "AVOKADOBEY"
     this.djCharacter
-      .roundRect(djX - 72, djY - 6, 144, 34, 10)
+      .roundRect(djX - 74, djY - 6, 148, 34, 10)
       .fill({ color: 0x05130b, alpha: 0.95 })
       .stroke({ width: 3, color: 0x44ff77, alpha: 0.95 + kick * 0.05 });
 
     // Neon avocado accents on sides of nameplate
     this.djCharacter
-      .circle(djX - 60, djY + 11, 4.5)
+      .circle(djX - 62, djY + 11, 4.5)
       .fill({ color: 0x55ff77 });
     this.djCharacter
-      .circle(djX + 60, djY + 11, 4.5)
+      .circle(djX + 62, djY + 11, 4.5)
       .fill({ color: 0x55ff77 });
 
+    // DJ Name text position and subtle sway
     this.djBackText.x = djX;
     this.djBackText.y = djY + 11;
+    this.djBackText.rotation = bodySway * 0.015;
 
     // 3. Cyber Backpack / Oxygen Energy Battery below nameplate
     this.djCharacter
@@ -320,30 +347,127 @@ export class DJBooth {
       .roundRect(djX - 16, djY + 36, 32, 20, 4)
       .fill({ color: 0x00e5ff, alpha: 0.65 + kick * 0.35 });
 
-    // 4. Arms & Hands - "Hands in the Air!"
-    // Left Arm raised up
-    this.djCharacter
-      .moveTo(djX - 40, djY - 5)
-      .lineTo(djX - 85, djY - 60 + armRaise)
-      .lineTo(djX - 70, djY - 80 + armRaise)
-      .stroke({ width: 14, color: 0x51638b, cap: 'round' });
-    // Left Glove
-    this.djCharacter
-      .circle(djX - 70, djY - 80 + armRaise, 11)
-      .fill({ color: 0x00e5ff })
-      .stroke({ width: 2, color: 0xffffff });
+    // 4. Dynamic Arms & Hands Based on DJ Animation State
+    const armRaise = Math.sin(this.time * 4) * 15;
 
-    // Right Arm raised up
-    this.djCharacter
-      .moveTo(djX + 40, djY - 5)
-      .lineTo(djX + 85, djY - 60 - armRaise)
-      .lineTo(djX + 70, djY - 80 - armRaise)
-      .stroke({ width: 14, color: 0x51638b, cap: 'round' });
-    // Right Glove
-    this.djCharacter
-      .circle(djX + 70, djY - 80 - armRaise, 11)
-      .fill({ color: 0x00e5ff })
-      .stroke({ width: 2, color: 0xffffff });
+    if (this.animState === 'turntable_scratch') {
+      // Left arm down on left turntable (scratching back & forth rapidly)
+      const scratchX = Math.sin(this.time * 24) * 14;
+      this.djCharacter
+        .moveTo(djX - 40, djY - 5)
+        .lineTo(djX - 90 + scratchX, djY - 15)
+        .lineTo(djX - 120 + scratchX, djY - 45)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX - 120 + scratchX, djY - 45, 11)
+        .fill({ color: 0x00e5ff })
+        .stroke({ width: 2, color: 0xffffff });
+
+      // Right arm cupping headphone to ear
+      headTilt = 7;
+      this.djCharacter
+        .moveTo(djX + 40, djY - 5)
+        .lineTo(djX + 55, djY - 35)
+        .lineTo(djX + 32, djY - 60)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX + 32, djY - 60, 11)
+        .fill({ color: 0xff00bb })
+        .stroke({ width: 2, color: 0xffffff });
+
+    } else if (this.animState === 'hype_crowd') {
+      // High-energy crowd hype: Both arms pumping up into the air vigorously
+      const hypeY = -Math.abs(Math.sin(this.time * 10)) * 26;
+      this.djCharacter
+        .moveTo(djX - 40, djY - 5)
+        .lineTo(djX - 85, djY - 65 + hypeY)
+        .lineTo(djX - 65, djY - 95 + hypeY)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX - 65, djY - 95 + hypeY, 11)
+        .fill({ color: 0x00ffff })
+        .stroke({ width: 2, color: 0xffffff });
+
+      this.djCharacter
+        .moveTo(djX + 40, djY - 5)
+        .lineTo(djX + 85, djY - 65 + hypeY)
+        .lineTo(djX + 65, djY - 95 + hypeY)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX + 65, djY - 95 + hypeY, 11)
+        .fill({ color: 0x00ffff })
+        .stroke({ width: 2, color: 0xffffff });
+
+    } else if (this.animState === 'point_vip') {
+      // Pointing toward VIP platform on the left, other hand on turntable
+      this.djCharacter
+        .moveTo(djX - 40, djY - 5)
+        .lineTo(djX - 110, djY - 45)
+        .lineTo(djX - 150, djY - 55)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX - 150, djY - 55, 11)
+        .fill({ color: 0xffea00 })
+        .stroke({ width: 2, color: 0xffffff });
+
+      // Right arm on mixer desk
+      this.djCharacter
+        .moveTo(djX + 40, djY - 5)
+        .lineTo(djX + 70, djY - 20)
+        .lineTo(djX + 90, djY - 45)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX + 90, djY - 45, 11)
+        .fill({ color: 0x00e5ff })
+        .stroke({ width: 2, color: 0xffffff });
+
+    } else if (this.animState === 'headphone_cue') {
+      // Left hand cupping headphone, right hand tweaking mixer EQ knob
+      headTilt = -8;
+      this.djCharacter
+        .moveTo(djX - 40, djY - 5)
+        .lineTo(djX - 55, djY - 35)
+        .lineTo(djX - 32, djY - 60)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX - 32, djY - 60, 11)
+        .fill({ color: 0x00ffff })
+        .stroke({ width: 2, color: 0xffffff });
+
+      // Right hand tweaking knob
+      const knobMove = Math.sin(this.time * 6) * 10;
+      this.djCharacter
+        .moveTo(djX + 40, djY - 5)
+        .lineTo(djX + 60, djY - 20)
+        .lineTo(djX + 50 + knobMove, djY - 35)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX + 50 + knobMove, djY - 35, 11)
+        .fill({ color: 0x00ff88 })
+        .stroke({ width: 2, color: 0xffffff });
+
+    } else {
+      // Standard hands up rave
+      this.djCharacter
+        .moveTo(djX - 40, djY - 5)
+        .lineTo(djX - 85, djY - 60 + armRaise)
+        .lineTo(djX - 70, djY - 80 + armRaise)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX - 70, djY - 80 + armRaise, 11)
+        .fill({ color: 0x00e5ff })
+        .stroke({ width: 2, color: 0xffffff });
+
+      this.djCharacter
+        .moveTo(djX + 40, djY - 5)
+        .lineTo(djX + 85, djY - 60 - armRaise)
+        .lineTo(djX + 70, djY - 80 - armRaise)
+        .stroke({ width: 14, color: 0x51638b, cap: 'round' });
+      this.djCharacter
+        .circle(djX + 70, djY - 80 - armRaise, 11)
+        .fill({ color: 0x00e5ff })
+        .stroke({ width: 2, color: 0xffffff });
+    }
 
     // 5. Astronaut Helmet (Back view)
     this.djCharacter
@@ -368,7 +492,6 @@ export class DJBooth {
   private renderDeskSpotlights(kick: number) {
     this.spotlightGraphics.clear();
 
-    // Twin cyber spotlights mounted on booth shooting upward
     const angleOffset = Math.sin(this.time * 2) * 0.2;
 
     const drawDeskLight = (x: number, baseAngle: number) => {
@@ -386,7 +509,6 @@ export class DJBooth {
         .closePath()
         .fill({ color: 0x00f0ff, alpha: 0.18 + kick * 0.15 });
 
-      // Fixture base
       this.spotlightGraphics
         .roundRect(x - 18, 1520, 36, 20, 5)
         .fill({ color: 0x0b1020 })

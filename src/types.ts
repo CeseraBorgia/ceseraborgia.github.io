@@ -1,12 +1,9 @@
 export type LaneType =
-  | 'tier5_viewer'
-  | 'tier4_follower'
-  | 'tier3_liker'
-  | 'tier2_gifter'
-  | 'tier1_vip';
-
-// Backward compatibility helper
-export type LegacyLaneType = 'back' | 'mid' | 'front';
+  | 'dj_stage'        // 30 sn boyunca DJ'in yanında VIP dansı
+  | 'tier4_gifter'    // En ön katman: Hediye atanlar (Süre sınırı olmadan kalıcı)
+  | 'tier3_liker'     // Bir arka: Takipçi olup beğeni atanlar (60 sn)
+  | 'tier2_follower'  // Bir arka: Takipçiler
+  | 'tier1_viewer';   // En arka: İzleyiciler (öne çekilmiş & net)
 
 export type HairStyle =
   | 'short_fade'
@@ -15,14 +12,15 @@ export type HairStyle =
   | 'long_ponytail'
   | 'cyber_braids'
   | 'cap_backwards'
+  | 'curtains_parted'
   | 'buzzcut';
 
 export type EyewearType =
+  | 'none'            // Doğal insan gözü & kaş
   | 'cyber_visor'
   | 'neon_shades'
   | 'rave_goggles'
-  | 'cat_eye'
-  | 'none';
+  | 'cat_eye';
 
 export type TopStyle =
   | 'rave_hoodie'
@@ -37,10 +35,20 @@ export type BottomStyle =
   | 'space_joggers'
   | 'cyber_jeans';
 
+export type DanceStyle =
+  | 'hands_up_rave'
+  | 'shuffle_groove'
+  | 'headbang_bounce'
+  | 'hiphop_dab'
+  | 'disco_point'
+  | 'spin_jump'
+  | 'zero_g_float';
+
 export interface AvatarProfile {
   skinColor: number;
   hairStyle: HairStyle;
   hairColor: number;
+  eyeColor: number;
   eyewear: EyewearType;
   eyewearColor: number;
   topStyle: TopStyle;
@@ -51,6 +59,7 @@ export interface AvatarProfile {
   shoeColor: number;
   glowColor: number;
   hasHeadphones: boolean;
+  hasPiercing: boolean;
 }
 
 export interface AvatarColorScheme {
