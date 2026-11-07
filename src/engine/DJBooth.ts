@@ -122,12 +122,22 @@ export class DJBooth {
       const h = 480;
       const y = 1420;
 
-      // Speaker cabinet body
-      g.roundRect(x, y, w, h, 14)
-        .fill({ color: 0x111625 })
-        .stroke({ width: 3.5, color: 0x00e5ff, alpha: 0.85 });
+    // Speaker underglow halo on stage floor
+    const haloAlpha = 0.25 + kick * 0.35;
+    const haloCol = isLeft ? 0x00e5ff : 0xff00bb;
+    g.ellipse(x + w / 2, y + h, 95, 22).fill({ color: haloCol, alpha: haloAlpha });
 
-      // Metal mesh texture / inner bezel
+    // Speaker cabinet body
+    g.roundRect(x, y, w, h, 14)
+      .fill({ color: 0x141b2e })
+      .stroke({ width: 3.5, color: isLeft ? 0x00e5ff : 0xff00bb, alpha: 0.9 });
+
+    // Glowing vertical neon strip on outer edge
+    const stripX = isLeft ? x + 6 : x + w - 10;
+    g.roundRect(stripX, y + 16, 4, h - 32, 2)
+      .fill({ color: isLeft ? 0x00ffff : 0xff00aa, alpha: 0.85 + kick * 0.15 });
+
+    // Metal mesh texture / inner bezel
       g.roundRect(x + 12, y + 14, w - 24, h - 28, 10)
         .fill({ color: 0x090c14 })
         .stroke({ width: 2, color: 0x242d44 });
@@ -227,17 +237,22 @@ export class DJBooth {
       .fill({ color: 0x0a0f1d })
       .stroke({ width: 3, color: 0x00f0ff, alpha: 0.95 });
 
+    // Front DJ Desk Underglow Neon Wash
+    this.boothGraphics
+      .ellipse(540, 1820, 310, 26)
+      .fill({ color: 0x00f0ff, alpha: 0.35 + kick * 0.35 });
+
     // Front digital LED Equalizer panel on desk face
     const barCount = 20;
     const barW = 18;
     const startX = 300;
     for (let i = 0; i < barCount; i++) {
       const bx = startX + i * 24;
-      const barHeight = (Math.sin(this.time * 8 + i * 0.9) * 0.5 + 0.5) * 55 * (0.5 + kick * 0.5);
-      const col = i % 2 === 0 ? 0x00f0ff : 0xff00aa;
+      const barHeight = (Math.sin(this.time * 8 + i * 0.9) * 0.5 + 0.5) * 58 * (0.5 + kick * 0.5);
+      const col = [0x00f0ff, 0x00ff88, 0xffea00, 0xff00bb, 0xaa00ff][i % 5];
       this.boothGraphics
         .rect(bx, 1720 - barHeight, barW, barHeight)
-        .fill({ color: col, alpha: 0.85 });
+        .fill({ color: col, alpha: 0.9 });
     }
 
     // Two Glowing Turntables / Jog Wheels on central desk
