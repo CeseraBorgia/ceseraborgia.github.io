@@ -261,8 +261,9 @@ export class Avatar {
     this.currentScale = target;
     this.container.scale.set(this.currentScale);
 
-    // Level of detail optimization: in Tier 5 hide detailed name container to save render costs
-    this.nameContainer.visible = this.lane !== 'tier5_viewer';
+    // Visual Optimization: In Tiers 4 & 5 hide dense name tags to avoid clutter
+    // Only active interactors (VIP Tier 1, Gifters Tier 2, Likers Tier 3) show prominent name tags
+    this.nameContainer.visible = this.lane === 'tier1_vip' || this.lane === 'tier2_gifter' || this.lane === 'tier3_liker';
   }
 
   // Draw the human character once with rich variety
@@ -573,13 +574,13 @@ export class Avatar {
 
     // Drop shadow
     this.speechBubbleGfx
-      .roundRect(-bw / 2 + 2, -bh - 44, bw, bh, 12)
+      .roundRect(-bw / 2 + 2, -bh - 95, bw, bh, 12)
       .fill({ color: 0x000000, alpha: 0.45 });
 
     // Bubble body
     const strokeColor = this.isTop3Vip ? 0xffea00 : this.lane === 'tier2_gifter' ? 0xff00bb : 0x00d4ff;
     this.speechBubbleGfx
-      .roundRect(-bw / 2, -bh - 46, bw, bh, 12)
+      .roundRect(-bw / 2, -bh - 97, bw, bh, 12)
       .fill({ color: 0xf5f8ff })
       .stroke({
         width: 3,
@@ -589,15 +590,15 @@ export class Avatar {
 
     // Pointer tail
     this.speechBubbleGfx
-      .moveTo(-8, -46)
-      .lineTo(0, -34)
-      .lineTo(8, -46)
+      .moveTo(-8, -97)
+      .lineTo(0, -82)
+      .lineTo(8, -97)
       .closePath()
       .fill({ color: 0xf5f8ff })
       .stroke({ width: 2, color: strokeColor });
 
     this.speechText.x = 0;
-    this.speechText.y = -bh / 2 - 46;
+    this.speechText.y = -bh / 2 - 97;
 
     this.speechContainer.visible = true;
     this.speechContainer.alpha = 1.0;
@@ -691,15 +692,15 @@ export class Avatar {
     let armRot = 0;
 
     if (this.lane === 'tier1_vip') {
-      // High-energy VIP dance
-      bounce = -Math.abs(Math.sin(phase * 1.5)) * 24 * (0.8 + kickIntensity * 0.5);
+      // High-energy VIP dance with hands in the air!
+      bounce = -Math.abs(Math.sin(phase * 1.5)) * 26 * (0.8 + kickIntensity * 0.5);
       sway = Math.sin(phase * 0.75) * 0.12;
-      armRot = Math.sin(phase * 1.5) * 0.8;
+      armRot = 2.4 + Math.sin(phase * 1.5) * 0.45;
     } else if (this.lane === 'tier2_gifter') {
-      // Excited gifter dance
+      // Excited gifter dance with hands waving!
       bounce = -Math.abs(Math.sin(phase * 1.3)) * 18 * (0.7 + kickIntensity * 0.4);
       sway = Math.sin(phase * 0.65) * 0.08;
-      armRot = Math.sin(phase * 1.3) * 0.6;
+      armRot = 1.9 + Math.sin(phase * 1.3) * 0.35;
     } else if (this.lane === 'tier3_liker') {
       // Liker bounce with heart rhythm
       bounce = -Math.abs(Math.sin(phase * 1.1)) * 14 * (0.6 + kickIntensity * 0.4);

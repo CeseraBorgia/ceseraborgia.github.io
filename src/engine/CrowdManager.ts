@@ -12,9 +12,9 @@ export class CrowdManager {
 
   // Exact 3 Front VIP Spots (Tier 1: En çok hediye atan 3 kişi)
   private vipSlots = [
-    { rank: 1, x: 540, y: 1260, occupiedBy: null as Avatar | null },
-    { rank: 2, x: 340, y: 1220, occupiedBy: null as Avatar | null },
-    { rank: 3, x: 740, y: 1220, occupiedBy: null as Avatar | null }
+    { rank: 1, x: 540, y: 1240, occupiedBy: null as Avatar | null },
+    { rank: 2, x: 330, y: 1200, occupiedBy: null as Avatar | null },
+    { rank: 3, x: 750, y: 1200, occupiedBy: null as Avatar | null }
   ];
 
   constructor() {
@@ -31,7 +31,7 @@ export class CrowdManager {
       const row = Math.floor(i / tier5Cols);
       const col = i % tier5Cols;
       const x = 70 + col * 55 + (row % 2) * 27 + (Math.random() - 0.5) * 15;
-      const y = 690 + row * 14 + (Math.random() - 0.5) * 10;
+      const y = 670 + row * 12 + (Math.random() - 0.5) * 8;
       const uname = `izleyici_${i + 1}`;
       const av = new Avatar(`user_${this.nextId++}`, uname, 'tier5_viewer', x, y);
       this.addAvatar(av);
@@ -44,7 +44,7 @@ export class CrowdManager {
       const row = Math.floor(i / tier4Cols);
       const col = i % tier4Cols;
       const x = 110 + col * 75 + (row % 2) * 35 + (Math.random() - 0.5) * 18;
-      const y = 820 + row * 28 + (Math.random() - 0.5) * 12;
+      const y = 785 + row * 26 + (Math.random() - 0.5) * 10;
       const uname = `takipci_${i + 1}`;
       const av = new Avatar(`user_${this.nextId++}`, uname, 'tier4_follower', x, y);
       av.isFollower = true;
@@ -57,20 +57,20 @@ export class CrowdManager {
     for (let i = 0; i < tier3Count; i++) {
       const row = Math.floor(i / tier3Cols);
       const col = i % tier3Cols;
-      const x = 150 + col * 110 + (row % 2) * 50 + (Math.random() - 0.5) * 20;
-      const y = 940 + row * 45 + (Math.random() - 0.5) * 15;
+      const x = 140 + col * 110 + (row % 2) * 55 + (Math.random() - 0.5) * 20;
+      const y = 890 + row * 45 + (Math.random() - 0.5) * 12;
       const uname = `begenen_${i + 1}`;
       const av = new Avatar(`user_${this.nextId++}`, uname, 'tier3_liker', x, y);
       av.isFollower = true;
-      av.likeTierTimer = 45 + Math.random() * 15; // initially in Tier 3
+      av.likeTierTimer = 45 + Math.random() * 15;
       this.addAvatar(av);
     }
 
     // 4. Tier 2 (Bir önünde: 7 hediye atanlar)
     const tier2Count = 7;
     for (let i = 0; i < tier2Count; i++) {
-      const x = 170 + i * 110 + (Math.random() - 0.5) * 25;
-      const y = 1080 + (i % 2) * 40 + (Math.random() - 0.5) * 15;
+      const x = 160 + i * 110 + (Math.random() - 0.5) * 25;
+      const y = 1010 + (i % 2) * 45 + (Math.random() - 0.5) * 15;
       const uname = `hediyeci_${i + 1}`;
       const av = new Avatar(`user_${this.nextId++}`, uname, 'tier2_gifter', x, y);
       av.isFollower = true;

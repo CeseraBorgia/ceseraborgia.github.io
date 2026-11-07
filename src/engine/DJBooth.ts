@@ -59,18 +59,18 @@ export class DJBooth {
 
     // 6. DJ Back Jacket Name: "AvokadoBey"
     this.djBackText = new Text({
-      text: 'AvokadoBey',
+      text: 'AVOKADOBEY',
       style: new TextStyle({
         fontFamily: 'Impact, Orbitron, Arial Black, sans-serif',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '900',
-        letterSpacing: 2,
-        fill: 0x55ff77,
-        stroke: { width: 3.5, color: 0x051d0d },
+        letterSpacing: 3,
+        fill: 0x44ff77,
+        stroke: { width: 4, color: 0x04190b },
         dropShadow: {
           alpha: 1.0,
           angle: 0,
-          blur: 10,
+          blur: 14,
           color: 0x00ff88,
           distance: 0
         }
@@ -294,16 +294,16 @@ export class DJBooth {
 
     // Cyber DJ Jacket Back Plate with glowing border for "AvokadoBey"
     this.djCharacter
-      .roundRect(djX - 62, djY - 4, 124, 30, 8)
-      .fill({ color: 0x07150e, alpha: 0.95 })
-      .stroke({ width: 2.5, color: 0x44ff77, alpha: 0.95 + kick * 0.05 });
+      .roundRect(djX - 72, djY - 6, 144, 34, 10)
+      .fill({ color: 0x05130b, alpha: 0.95 })
+      .stroke({ width: 3, color: 0x44ff77, alpha: 0.95 + kick * 0.05 });
 
     // Neon avocado accents on sides of nameplate
     this.djCharacter
-      .circle(djX - 52, djY + 11, 4)
+      .circle(djX - 60, djY + 11, 4.5)
       .fill({ color: 0x55ff77 });
     this.djCharacter
-      .circle(djX + 52, djY + 11, 4)
+      .circle(djX + 60, djY + 11, 4.5)
       .fill({ color: 0x55ff77 });
 
     this.djBackText.x = djX;
