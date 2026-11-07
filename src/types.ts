@@ -1,5 +1,5 @@
 export type LaneType =
-  | 'dj_stage'        // 30 sn boyunca DJ'in yanında VIP dansı
+  | 'dj_stage'        // 3 dk boyunca DJ'in yanında VIP dansı (180 sn)
   | 'tier4_gifter'    // En ön katman: Hediye atanlar (Süre sınırı olmadan kalıcı)
   | 'tier3_liker'     // Bir arka: Takipçi olup beğeni atanlar (60 sn)
   | 'tier2_follower'  // Bir arka: Takipçiler
@@ -41,7 +41,7 @@ export type DanceStyle =
   | 'headbang_bounce'
   | 'hiphop_dab'
   | 'disco_point'
-  | 'spin_jump'
+  | 'lunar_bounce'
   | 'zero_g_float';
 
 export interface AvatarProfile {

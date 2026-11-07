@@ -159,9 +159,10 @@ export class Avatar {
   public likeCount: number = 0;      // 50 likes -> character morphs
   public costumeTimer: number = 0;   // 5 minutes (300s) -> character morphs
   public likeTierTimer: number = 0;  // Tier 3: 60s
-  public djStageTimer: number = 0;   // DJ Stage VIP: 30s
+  public djStageTimer: number = 0;   // DJ Stage VIP: 180s (3 dakika)
   public totalDiamonds: number = 0;  // Cumulative gift diamonds
   public isFollower: boolean = false;
+  public isPlaceholder: boolean = false; // Başlangıç dummy avatarı mı?
   public giftStreak: number = 0;
 
   // Dance Style
@@ -191,8 +192,6 @@ export class Avatar {
   // Animation Phase
   private animPhaseOffset: number;
   private danceSpeed: number;
-  private spinProgress: number = 0;
-  private isSpinning: boolean = false;
 
   constructor(
     id: string,
@@ -214,7 +213,7 @@ export class Avatar {
 
     const danceStyles: DanceStyle[] = [
       'hands_up_rave', 'shuffle_groove', 'headbang_bounce',
-      'hiphop_dab', 'disco_point', 'spin_jump', 'zero_g_float'
+      'hiphop_dab', 'disco_point', 'lunar_bounce', 'zero_g_float'
     ];
     this.danceStyle = danceStyles[Math.floor(Math.random() * danceStyles.length)];
 
@@ -759,20 +758,6 @@ export class Avatar {
     let leftArmRot = 0;
     let rightArmRot = 0;
 
-    // Trigger spin jump on heavy beat occasionally
-    if (kickIntensity > 0.85 && Math.random() < 0.04 && !this.isSpinning) {
-      this.isSpinning = true;
-      this.spinProgress = 0;
-    }
-    if (this.isSpinning) {
-      this.spinProgress += dt * 5;
-      this.characterContainer.rotation = this.spinProgress * Math.PI * 2;
-      if (this.spinProgress >= 1) {
-        this.isSpinning = false;
-        this.characterContainer.rotation = 0;
-      }
-    }
-
     if (this.lane === 'dj_stage') {
       // High-energy DJ Stage VIP Dance
       bounce = -Math.abs(Math.sin(phase * 1.6)) * 28 * (0.8 + kickIntensity * 0.6);
@@ -814,6 +799,12 @@ export class Avatar {
         const toggle = Math.sin(phase * 0.5) > 0;
         leftArmRot = toggle ? 2.3 : -0.2;
         rightArmRot = toggle ? 0.2 : -2.3;
+      } else if (this.danceStyle === 'lunar_bounce') {
+        // High bounce with lunar gravity wave
+        bounce = -Math.abs(Math.sin(phase * 1.3)) * 20 * (0.8 + kickIntensity * 0.4);
+        sway = Math.sin(phase * 0.65) * 0.12;
+        leftArmRot = 1.6 + Math.sin(phase * 1.3) * 0.5;
+        rightArmRot = -1.6 - Math.sin(phase * 1.3) * 0.5;
       } else {
         // Zero-G float & sway
         bounce = Math.sin(phase * 0.7) * 10;
@@ -823,9 +814,7 @@ export class Avatar {
       }
     }
 
-    if (!this.isSpinning) {
-      this.characterContainer.rotation = sway;
-    }
+    this.characterContainer.rotation = sway;
     this.characterContainer.y = bounce;
     this.leftArmGfx.rotation = leftArmRot;
     this.rightArmGfx.rotation = rightArmRot;

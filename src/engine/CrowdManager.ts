@@ -8,9 +8,13 @@ export class CrowdManager {
   public container: Container;
   public avatars: Avatar[] = [];
   private nextId: number = 1;
-  public readonly MAX_CROWD: number = 200;
+  public readonly MAX_CROWD: number = 400; // Kapasite 400 yapıldı
 
-  // Designated VIP Platforms next to the DJ Booth (30s duration)
+  public viewerCount: number = 0;
+  public realUserCount: number = 0;
+  public placeholderPurged: boolean = false;
+
+  // Designated VIP Platforms next to the DJ Booth (3 dakika / 180s duration)
   private djStageSlots = [
     { rank: 1, x: 230, y: 1540, occupiedBy: null as Avatar | null }, // Left DJ Stage Wing
     { rank: 2, x: 850, y: 1540, occupiedBy: null as Avatar | null }  // Right DJ Stage Wing
@@ -21,89 +25,91 @@ export class CrowdManager {
     this.container.label = 'CrowdContainer';
   }
 
-  // Populate exactly 200 avatars across the 4 dance floor tiers + DJ Stage VIPs
+  // Yayın başlarken DJ yanı BOŞ, diğer katmanlarda toplam 5-15 arası insan başlar
   public initCrowd() {
-    // 1. Tier 1 (En arkada: 135 izleyiciler / lurkers)
-    // Moved forward from previous deep background so speech bubbles are crystal clear
-    const tier1Count = 135;
-    const tier1Cols = 17;
-    for (let i = 0; i < tier1Count; i++) {
-      const row = Math.floor(i / tier1Cols);
-      const col = i % tier1Cols;
-      const x = 80 + col * 58 + (row % 2) * 29 + (Math.random() - 0.5) * 14;
-      const y = 740 + row * 11 + (Math.random() - 0.5) * 8;
+    // 1. DJ Stage: Başlangıçta tamamen BOŞ!
+    this.djStageSlots[0].occupiedBy = null;
+    this.djStageSlots[1].occupiedBy = null;
+
+    // 2. Diğer 4 katmanda toplam 12 insan (5-15 arası)
+    // Tier 1 (En arkada: 5 izleyici)
+    for (let i = 0; i < 5; i++) {
+      const x = 200 + i * 170 + (Math.random() - 0.5) * 30;
+      const y = 760 + (i % 2) * 30;
       const uname = `izleyici_${i + 1}`;
-      const av = new Avatar(`user_${this.nextId++}`, uname, 'tier1_viewer', x, y);
-      // Randomize initial costume timer so all 200 don't mutate at the exact same frame
+      const av = new Avatar(`init_${this.nextId++}`, uname, 'tier1_viewer', x, y);
+      av.isPlaceholder = true;
       av.costumeTimer = Math.random() * 240;
       this.addAvatar(av);
     }
 
-    // 2. Tier 2 (Bir önünde: 35 takipçiler)
-    const tier2Count = 35;
-    const tier2Cols = 12;
-    for (let i = 0; i < tier2Count; i++) {
-      const row = Math.floor(i / tier2Cols);
-      const col = i % tier2Cols;
-      const x = 110 + col * 75 + (row % 2) * 37 + (Math.random() - 0.5) * 16;
-      const y = 840 + row * 26 + (Math.random() - 0.5) * 10;
+    // Tier 2 (Takipçiler: 3 insan)
+    for (let i = 0; i < 3; i++) {
+      const x = 280 + i * 260 + (Math.random() - 0.5) * 30;
+      const y = 860 + (i % 2) * 25;
       const uname = `takipci_${i + 1}`;
-      const av = new Avatar(`user_${this.nextId++}`, uname, 'tier2_follower', x, y);
+      const av = new Avatar(`init_${this.nextId++}`, uname, 'tier2_follower', x, y);
       av.isFollower = true;
+      av.isPlaceholder = true;
       av.costumeTimer = Math.random() * 240;
       this.addAvatar(av);
     }
 
-    // 3. Tier 3 (Bir önünde: 18 beğeni atanlar - 1dk / 60sn kalır)
-    const tier3Count = 18;
-    const tier3Cols = 9;
-    for (let i = 0; i < tier3Count; i++) {
-      const row = Math.floor(i / tier3Cols);
-      const col = i % tier3Cols;
-      const x = 130 + col * 96 + (row % 2) * 48 + (Math.random() - 0.5) * 18;
-      const y = 940 + row * 45 + (Math.random() - 0.5) * 12;
-      const uname = `begenen_${i + 1}`;
-      const av = new Avatar(`user_${this.nextId++}`, uname, 'tier3_liker', x, y);
-      av.isFollower = true;
-      av.likeTierTimer = 45 + Math.random() * 15;
-      av.costumeTimer = Math.random() * 240;
-      this.addAvatar(av);
-    }
-
-    // 4. Tier 4 (En önde: 10 hediye atanlar - SÜRE SINIRI OLMADAN KALICI)
-    const tier4Count = 10;
-    for (let i = 0; i < tier4Count; i++) {
-      const x = 145 + i * 88 + (Math.random() - 0.5) * 10;
-      const y = 1060 + (i % 2) * 65 + (Math.random() - 0.5) * 10;
-      const uname = `hediyeci_${i + 1}`;
-      const av = new Avatar(`user_${this.nextId++}`, uname, 'tier4_gifter', x, y);
-      av.isFollower = true;
-      av.totalDiamonds = 30 + i * 15;
-      av.costumeTimer = Math.random() * 240;
-      this.addAvatar(av);
-    }
-
-    // 5. DJ Stage VIPs (En çok hediye atanlar: 30 saniye boyunca DJ'in yanında)
-    const topVipNames = ['efe_türk', 'aylin_vip'];
-    const topVipDiamonds = [500, 350];
+    // Tier 3 (Beğenenler: 2 insan)
     for (let i = 0; i < 2; i++) {
-      const slot = this.djStageSlots[i];
-      const uname = topVipNames[i];
-      const av = new Avatar(`user_${this.nextId++}`, uname, 'dj_stage', slot.x, slot.y);
+      const x = 360 + i * 360 + (Math.random() - 0.5) * 30;
+      const y = 960 + (i % 2) * 30;
+      const uname = `begenen_${i + 1}`;
+      const av = new Avatar(`init_${this.nextId++}`, uname, 'tier3_liker', x, y);
       av.isFollower = true;
-      av.totalDiamonds = topVipDiamonds[i];
-      av.djStageTimer = 30; // 30 seconds next to DJ
-      slot.occupiedBy = av;
+      av.isPlaceholder = true;
+      av.likeTierTimer = 60;
+      av.costumeTimer = Math.random() * 240;
+      this.addAvatar(av);
+    }
+
+    // Tier 4 (En önde hediye atanlar: 2 insan)
+    for (let i = 0; i < 2; i++) {
+      const x = 380 + i * 320 + (Math.random() - 0.5) * 20;
+      const y = 1080 + (i % 2) * 45;
+      const uname = `hediyeci_${i + 1}`;
+      const av = new Avatar(`init_${this.nextId++}`, uname, 'tier4_gifter', x, y);
+      av.isFollower = true;
+      av.isPlaceholder = true;
+      av.totalDiamonds = 30 + i * 20;
       av.costumeTimer = Math.random() * 240;
       this.addAvatar(av);
     }
 
     // Initial greeting speech bubbles
     setTimeout(() => {
-      this.findAvatar('efe_türk')?.say('DJ YANINDAYIM! 🎧👑', 5);
-      this.findAvatar('aylin_vip')?.say('Müzik efsane! 🚀', 5);
-      this.findAvatar('hediyeci_1')?.say('En öndeyiz! 🔥', 5);
-    }, 600);
+      this.findAvatar('hediyeci_1')?.say('Rave başlıyor! 🚀', 5);
+      this.findAvatar('begenen_1')?.say('Ay partisi! 🌙🔥', 5);
+    }, 800);
+  }
+
+  // İzleyici sayısı 100 olduğunda başlangıçta yaratılan gerçek olmayan insanları sil
+  public checkViewerThreshold(count: number, particles?: ParticleSystem) {
+    this.viewerCount = count;
+    if ((this.viewerCount >= 100 || this.realUserCount >= 100) && !this.placeholderPurged) {
+      this.purgePlaceholders(particles);
+    }
+  }
+
+  public purgePlaceholders(particles?: ParticleSystem) {
+    if (this.placeholderPurged) return;
+    this.placeholderPurged = true;
+
+    const placeholders = this.avatars.filter(a => a.isPlaceholder);
+    for (const av of placeholders) {
+      this.container.removeChild(av.container);
+      if (particles) {
+        particles.triggerSmallGift(av.x, av.y, 0x00f0ff);
+      }
+    }
+
+    this.avatars = this.avatars.filter(a => !a.isPlaceholder);
+    console.log(`[CrowdManager] 100 izleyiciye ulaşıldı! ${placeholders.length} sahte/placeholder avatar tamamen silindi.`);
   }
 
   private addAvatar(av: Avatar) {
@@ -127,11 +133,15 @@ export class CrowdManager {
   public getOrCreateAvatar(username: string, defaultLane: LaneType = 'tier1_viewer'): Avatar {
     let av = this.findAvatar(username);
     if (!av) {
+      this.realUserCount++;
+      this.checkViewerThreshold(this.viewerCount);
+
       if (this.avatars.length >= this.MAX_CROWD) {
         // Recycle a Tier 1 lurker
         const lurker = this.avatars.find(a => a.lane === 'tier1_viewer' && !a.isJumping);
         if (lurker) {
           lurker.username = username;
+          lurker.isPlaceholder = false;
           lurker.profile = generateAvatarProfile(username);
           lurker['buildHumanModel']();
           lurker['nameText'].text = `@${username}`;
@@ -141,9 +151,10 @@ export class CrowdManager {
       }
 
       // Or spawn fresh
-      const x = 120 + Math.random() * 840;
-      const y = defaultLane === 'tier1_viewer' ? 740 + Math.random() * 70 : 850;
+      const x = 90 + Math.random() * 900;
+      const y = defaultLane === 'tier1_viewer' ? 740 + Math.random() * 80 : 850;
       av = new Avatar(`user_${this.nextId++}`, username, defaultLane, x, y);
+      av.isPlaceholder = false;
       this.addAvatar(av);
     }
     return av;
@@ -162,9 +173,9 @@ export class CrowdManager {
     const av = this.getOrCreateAvatar(username, 'tier1_viewer');
     av.isFollower = true;
 
-    // Target position in Tier 2 (y: 840 - 920)
-    const targetX = 110 + Math.random() * 860;
-    const targetY = 840 + Math.random() * 80;
+    // Target position in Tier 2 (y: 840 - 930) - Katmanların üst limiti yok
+    const targetX = 100 + Math.random() * 880;
+    const targetY = 840 + Math.random() * 90;
 
     av.jumpTo(targetX, targetY, 'tier2_follower', 1.2);
     setTimeout(() => {
@@ -184,8 +195,8 @@ export class CrowdManager {
 
     // If avatar is in Tier 1 or Tier 2, jump forward to Tier 3
     if (av.lane === 'tier1_viewer' || av.lane === 'tier2_follower') {
-      const targetX = 130 + Math.random() * 820;
-      const targetY = 940 + Math.random() * 95;
+      const targetX = 120 + Math.random() * 840;
+      const targetY = 940 + Math.random() * 100;
       av.jumpTo(targetX, targetY, 'tier3_liker', 1.1);
     }
 
@@ -196,7 +207,7 @@ export class CrowdManager {
     return av;
   }
 
-  // 4. Gift Event -> Tier 4 (En önde KALICI) or DJ Stage VIP (30 saniye boyunca DJ'in yanında)
+  // 4. Gift Event -> Tier 4 (En önde KALICI) or DJ Stage VIP (3 DAKİKA / 180s boyunca DJ'in yanında)
   public handleGift(
     username: string,
     giftName: string,
@@ -214,7 +225,7 @@ export class CrowdManager {
     // Sound effect
     soundEngine.playGiftSFX(tier);
 
-    // If Big Gift OR top diamonds, promote to DJ Stage VIP (30 seconds next to DJ)
+    // If Big Gift OR high diamond count, promote to DJ Stage VIP (3 DAKİKA / 180s next to DJ)
     if (tier === 'big' || av.totalDiamonds >= 100) {
       this.promoteToDJStage(av, particles, giftName);
     } else {
@@ -225,9 +236,8 @@ export class CrowdManager {
     return av;
   }
 
-  // Promote to DJ Stage (VIP next to DJ for 30s)
+  // Promote to DJ Stage (VIP next to DJ for 3 MINUTES / 180s)
   private promoteToDJStage(av: Avatar, particles: ParticleSystem, giftName: string) {
-    // Pick first free DJ Stage slot or slot 0
     let slot = this.djStageSlots.find(s => s.occupiedBy === null || s.occupiedBy === av);
     if (!slot) {
       // If both occupied, replace the one with lowest remaining timer
@@ -237,24 +247,24 @@ export class CrowdManager {
       if (slot.occupiedBy && slot.occupiedBy !== av) {
         // Drop previous occupant to Tier 4 (front row)
         const prev = slot.occupiedBy;
-        const tx = 150 + Math.random() * 780;
-        const ty = 1070 + Math.random() * 90;
+        const tx = 140 + Math.random() * 800;
+        const ty = 1070 + Math.random() * 95;
         prev.jumpTo(tx, ty, 'tier4_gifter', 0.9);
       }
     }
 
     slot.occupiedBy = av;
-    av.djStageTimer = 30; // 30 seconds next to DJ
+    av.djStageTimer = 180; // 3 DAKİKA (180 saniye) boyunca DJ yanında kalır
     av.jumpTo(slot.x, slot.y, 'dj_stage', 0.95);
     av.updateNameTag();
 
     setTimeout(() => {
       particles.triggerBigGift(av.x, av.y, av.profile.glowColor);
-      av.say(`👑 DJ YANINDAYIM! ${giftName}! 💎`, 5);
+      av.say(`👑 3 DK DJ YANINDAYIM! ${giftName}! 💎`, 6);
     }, 450);
   }
 
-  // Promote to Tier 4 (En önde hediye atanlar - KALICI / süre sınırı olmadan)
+  // Promote to Tier 4 (En önde hediye atanlar - SÜRE SINIRI OLMADAN HEP EN ÖNDE KALICI)
   private promoteToTier4Permanent(
     av: Avatar,
     particles: ParticleSystem,
@@ -264,7 +274,7 @@ export class CrowdManager {
     // If not already on DJ Stage or Tier 4, jump forward to Tier 4
     if (av.lane !== 'dj_stage' && av.lane !== 'tier4_gifter') {
       const targetX = 140 + Math.random() * 800;
-      const targetY = 1070 + Math.random() * 95;
+      const targetY = 1060 + Math.random() * 110;
       av.jumpTo(targetX, targetY, 'tier4_gifter', 0.95);
     }
 
@@ -295,11 +305,11 @@ export class CrowdManager {
       const av = this.avatars[i];
       av.update(dt, time, kickIntensity, particles);
 
-      // Handle DJ Stage 30-second VIP timer
+      // Handle DJ Stage 3-MINUTE (180s) VIP timer
       if (av.lane === 'dj_stage' && !av.isJumping) {
         av.djStageTimer -= dt;
         if (av.djStageTimer <= 0) {
-          // 30 seconds expired: steps down to Tier 4 (En önde KALICI)
+          // 3 minutes expired: steps down to Tier 4 (En önde KALICI)
           const slot = this.djStageSlots.find(s => s.occupiedBy === av);
           if (slot) slot.occupiedBy = null;
 
@@ -315,14 +325,14 @@ export class CrowdManager {
         av.likeTierTimer -= dt;
         if (av.likeTierTimer <= 0) {
           // 1 minute expired: step back to Tier 2 (Takipçi katmanı)
-          const targetX = 110 + Math.random() * 860;
-          const targetY = 840 + Math.random() * 80;
+          const targetX = 100 + Math.random() * 880;
+          const targetY = 840 + Math.random() * 90;
           av.jumpTo(targetX, targetY, 'tier2_follower', 1.0);
           av.updateNameTag();
         }
       }
 
-      // NOTE: Tier 4 (Hediye atanlar) has NO TIMEOUT! They stay permanently in Tier 4 front row.
+      // NOTE: Tier 4 (Hediye atanlar) SÜRE SINIRI YOKTUR, HEP EN ÖNDE KALICIDIR.
     }
 
     // 2. Y-Depth Sorting for proper spatial overlap

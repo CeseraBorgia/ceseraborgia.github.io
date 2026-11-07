@@ -100,8 +100,13 @@ async function bootstrap() {
       hud.setMode(event.isTikTokConnected, event.tiktokUsername);
       return;
     }
+    if (event.type === 'roomUser' || event.data?.viewerCount) {
+      const vc = event.data?.viewerCount || event.data?.count || 0;
+      crowd.checkViewerThreshold(vc, particles);
+    }
     if (event.type === 'join') {
       crowd.handleJoin(event.data.username);
+      crowd.checkViewerThreshold(crowd.realUserCount, particles);
       hud.addPartyScore(1);
     } else if (event.type === 'follow') {
       crowd.handleFollow(event.data.username);

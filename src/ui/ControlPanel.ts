@@ -124,7 +124,7 @@ export class ControlPanel {
             <div class="btn-grid">
               <button id="btn-gift-small" class="btn btn-gift-small">🌹 Gül (Tier 4 - Kalıcı En Ön)</button>
               <button id="btn-gift-mid" class="btn btn-gift-mid">🚀 Roket (Tier 4 - Kalıcı)</button>
-              <button id="btn-gift-big" class="btn btn-gift-big">👑 Galaksi (DJ Yanı VIP - 30sn)</button>
+              <button id="btn-gift-big" class="btn btn-gift-big">👑 Galaksi (DJ Yanı VIP - 3 DAKİKA)</button>
             </div>
           </div>
 
@@ -143,6 +143,7 @@ export class ControlPanel {
           </div>
 
           <div class="control-section">
+            <button id="btn-purge-100" class="btn btn-primary" style="margin-bottom: 8px;">👥 100 İzleyiciye Ulaş (Başlangıç İnsanlarını Sil)</button>
             <button id="btn-obs-mode" class="btn btn-obs">📺 Bu Paneli Yayında Tamamen Gizle</button>
           </div>
         </div>
@@ -233,11 +234,17 @@ export class ControlPanel {
       this.hud.addPartyScore(15);
     });
 
-    // Big Gift (DJ Yanı VIP - 30sn)
+    // Big Gift (DJ Yanı VIP - 3 DAKİKA)
     this.containerEl.querySelector('#btn-gift-big')?.addEventListener('click', () => {
       const u = this.getRandomUser();
       this.crowd.handleGift(u, 'Galaxy Rave', 'big', this.particles, 100);
       this.hud.addPartyScore(30);
+    });
+
+    // 100 İzleyiciye Ulaş (Başlangıç insanlarını silme testi)
+    this.containerEl.querySelector('#btn-purge-100')?.addEventListener('click', () => {
+      this.crowd.checkViewerThreshold(100, this.particles);
+      this.hud.addPartyScore(15);
     });
 
     // Comment

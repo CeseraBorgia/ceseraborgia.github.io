@@ -64,21 +64,21 @@ export class DJBooth {
     this.djCharacter = new Graphics();
     this.container.addChild(this.djCharacter);
 
-    // 6. DJ Back Jacket Name: "AvokadoBey"
+    // 6. DJ Back Jacket Name: "AvokadoBey" (Ultra-prominent & high-contrast)
     this.djBackText = new Text({
       text: 'AVOKADOBEY',
       style: new TextStyle({
         fontFamily: 'Impact, Orbitron, Arial Black, sans-serif',
-        fontSize: 18,
+        fontSize: 24,
         fontWeight: '900',
-        letterSpacing: 3,
-        fill: 0x44ff77,
-        stroke: { width: 4, color: 0x04190b },
+        letterSpacing: 4,
+        fill: 0xffffff,
+        stroke: { width: 5, color: 0x021708 },
         dropShadow: {
           alpha: 1.0,
           angle: 0,
-          blur: 14,
-          color: 0x00ff88,
+          blur: 18,
+          color: 0x00ff66,
           distance: 0
         }
       })
@@ -313,27 +313,32 @@ export class DJBooth {
 
     // 2. Spacesuit Body (Torso back view)
     this.djCharacter
-      .roundRect(djX - 48, djY - 20, 96, 80, 20)
+      .roundRect(djX - 56, djY - 24, 112, 88, 22)
       .fill({ color: 0x51638b })
       .stroke({ width: 3, color: 0x1f2638 });
 
     // Cyber DJ Jacket Back Plate with glowing border for "AVOKADOBEY"
     this.djCharacter
-      .roundRect(djX - 74, djY - 6, 148, 34, 10)
-      .fill({ color: 0x05130b, alpha: 0.95 })
-      .stroke({ width: 3, color: 0x44ff77, alpha: 0.95 + kick * 0.05 });
+      .roundRect(djX - 86, djY - 8, 172, 42, 10)
+      .fill({ color: 0x030d06, alpha: 0.98 })
+      .stroke({ width: 3.5, color: 0x00ff66, alpha: 0.95 + kick * 0.05 });
+
+    // Inner neon accent border
+    this.djCharacter
+      .roundRect(djX - 82, djY - 4, 164, 34, 7)
+      .stroke({ width: 1.5, color: 0x00ffff, alpha: 0.7 });
 
     // Neon avocado accents on sides of nameplate
     this.djCharacter
-      .circle(djX - 62, djY + 11, 4.5)
-      .fill({ color: 0x55ff77 });
+      .circle(djX - 74, djY + 13, 5)
+      .fill({ color: 0x39ff14 });
     this.djCharacter
-      .circle(djX + 62, djY + 11, 4.5)
-      .fill({ color: 0x55ff77 });
+      .circle(djX + 74, djY + 13, 5)
+      .fill({ color: 0x39ff14 });
 
     // DJ Name text position and subtle sway
     this.djBackText.x = djX;
-    this.djBackText.y = djY + 11;
+    this.djBackText.y = djY + 13;
     this.djBackText.rotation = bodySway * 0.015;
 
     // 3. Cyber Backpack / Oxygen Energy Battery below nameplate
