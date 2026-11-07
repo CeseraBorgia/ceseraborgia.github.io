@@ -110,20 +110,20 @@ export class ControlPanel {
           </div>
 
           <div class="control-section">
-            <div class="section-label">👥 KALABALIK & DANS</div>
+            <div class="section-label">👥 5 KATMANLI DANS PİSTİ</div>
             <div class="btn-grid">
-              <button id="btn-spawn-viewer" class="btn">👤 Katıl (Arka Sıra)</button>
-              <button id="btn-follower-leap" class="btn btn-cyan">🚀 Takipçi Zıpla</button>
-              <button id="btn-like" class="btn btn-pink">❤️ Beğen</button>
+              <button id="btn-spawn-viewer" class="btn">👤 Katıl (Tier 5)</button>
+              <button id="btn-follower-leap" class="btn btn-cyan">🚀 Takip Et (Tier 4)</button>
+              <button id="btn-like" class="btn btn-pink">❤️ Beğen (Tier 3 - 1dk)</button>
             </div>
           </div>
 
           <div class="control-section">
-            <div class="section-label">🎁 HEDİYELER (VIP ÖN SIRA)</div>
+            <div class="section-label">🎁 HEDİYELER & TOP 3 VIP</div>
             <div class="btn-grid">
-              <button id="btn-gift-small" class="btn btn-gift-small">🌹 Gül (Küçük)</button>
-              <button id="btn-gift-mid" class="btn btn-gift-mid">🚀 Roket (Orta)</button>
-              <button id="btn-gift-big" class="btn btn-gift-big">🪐 Galaksi Süpernova (VIP Lazer)</button>
+              <button id="btn-gift-small" class="btn btn-gift-small">🌹 Gül (Tier 2 - 10sn)</button>
+              <button id="btn-gift-mid" class="btn btn-gift-mid">🚀 Roket (Tier 2)</button>
+              <button id="btn-gift-big" class="btn btn-gift-big">👑 Galaksi (Tier 1 Top 3 - 15sn)</button>
             </div>
           </div>
 
@@ -211,21 +211,21 @@ export class ControlPanel {
     // Small Gift
     this.containerEl.querySelector('#btn-gift-small')?.addEventListener('click', () => {
       const u = this.getRandomUser();
-      this.crowd.handleGift(u, 'Rose', 'small', this.particles);
+      this.crowd.handleGift(u, 'Rose', 'small', this.particles, 5);
       this.hud.addPartyScore(5);
     });
 
     // Medium Gift
     this.containerEl.querySelector('#btn-gift-mid')?.addEventListener('click', () => {
       const u = this.getRandomUser();
-      this.crowd.handleGift(u, 'Rocket', 'medium', this.particles);
+      this.crowd.handleGift(u, 'Rocket', 'medium', this.particles, 30);
       this.hud.addPartyScore(15);
     });
 
     // Big Gift
     this.containerEl.querySelector('#btn-gift-big')?.addEventListener('click', () => {
       const u = this.getRandomUser();
-      this.crowd.handleGift(u, 'Galaxy Rave', 'big', this.particles);
+      this.crowd.handleGift(u, 'Galaxy Rave', 'big', this.particles, 100);
       this.hud.addPartyScore(30);
     });
 

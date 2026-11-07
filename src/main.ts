@@ -117,7 +117,8 @@ async function bootstrap() {
         event.data.username,
         event.data.giftName,
         event.data.giftTier,
-        particles
+        particles,
+        event.data.diamonds || 0
       );
       const score = event.data.giftTier === 'big' ? 30 : event.data.giftTier === 'medium' ? 15 : 6;
       hud.addPartyScore(score);

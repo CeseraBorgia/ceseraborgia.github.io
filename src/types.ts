@@ -1,26 +1,56 @@
-export type LaneType = 'back' | 'mid' | 'front';
+export type LaneType =
+  | 'tier5_viewer'
+  | 'tier4_follower'
+  | 'tier3_liker'
+  | 'tier2_gifter'
+  | 'tier1_vip';
 
-export interface AvatarData {
-  id: string;
-  username: string;
-  lane: LaneType;
-  colorScheme: AvatarColorScheme;
-  visorColor: number;
+// Backward compatibility helper
+export type LegacyLaneType = 'back' | 'mid' | 'front';
+
+export type HairStyle =
+  | 'short_fade'
+  | 'messy_spikes'
+  | 'curly_afro'
+  | 'long_ponytail'
+  | 'cyber_braids'
+  | 'cap_backwards'
+  | 'buzzcut';
+
+export type EyewearType =
+  | 'cyber_visor'
+  | 'neon_shades'
+  | 'rave_goggles'
+  | 'cat_eye'
+  | 'none';
+
+export type TopStyle =
+  | 'rave_hoodie'
+  | 'crop_top'
+  | 'lunar_jacket'
+  | 'tech_vest'
+  | 'cyber_tee';
+
+export type BottomStyle =
+  | 'cargo_pants'
+  | 'shorts_leggings'
+  | 'space_joggers'
+  | 'cyber_jeans';
+
+export interface AvatarProfile {
+  skinColor: number;
+  hairStyle: HairStyle;
+  hairColor: number;
+  eyewear: EyewearType;
+  eyewearColor: number;
+  topStyle: TopStyle;
+  topColor: number;
+  topAccent: number;
+  bottomStyle: BottomStyle;
+  bottomColor: number;
+  shoeColor: number;
   glowColor: number;
-  scale: number;
-  x: number;
-  y: number;
-  targetX: number;
-  targetY: number;
-  danceStyle: 'moon_bounce' | 'zero_g_flip' | 'electronic_jump' | 'vip_rave';
-  giftStreak: number;
-  vipTimer: number; // seconds remaining in VIP
-  isJumping: boolean;
-  jumpProgress: number;
-  jumpHeight: number;
-  jumpStartX: number;
-  jumpStartY: number;
-  isDj?: boolean;
+  hasHeadphones: boolean;
 }
 
 export interface AvatarColorScheme {

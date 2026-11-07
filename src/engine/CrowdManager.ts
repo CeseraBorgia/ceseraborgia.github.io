@@ -1,66 +1,20 @@
 import { Container } from 'pixi.js';
-import { Avatar } from './Avatar';
-import { AvatarColorScheme, GiftTier, LaneType } from '../types';
+import { Avatar, generateAvatarProfile } from './Avatar';
+import { GiftTier, LaneType } from '../types';
 import { ParticleSystem } from './ParticleSystem';
 import { soundEngine } from './AudioEngine';
-
-const COLOR_PALETTES: AvatarColorScheme[] = [
-  {
-    suitColor: 0x4a5d85,
-    suitAccent: 0x00f0ff,
-    visorGlow: 0x00ffff,
-    jetpackFlame: 0x00d4ff,
-    nameColor: '#00ffff'
-  },
-  {
-    suitColor: 0x6e4a85,
-    suitAccent: 0xff00bb,
-    visorGlow: 0xff00bb,
-    jetpackFlame: 0xff33cc,
-    nameColor: '#ff00bb'
-  },
-  {
-    suitColor: 0x3d7465,
-    suitAccent: 0x00ff88,
-    visorGlow: 0x00ff99,
-    jetpackFlame: 0x33ffbb,
-    nameColor: '#00ff88'
-  },
-  {
-    suitColor: 0x7c6d3d,
-    suitAccent: 0xffbb00,
-    visorGlow: 0xffcc00,
-    jetpackFlame: 0xff9900,
-    nameColor: '#ffbb00'
-  },
-  {
-    suitColor: 0x3b5072,
-    suitAccent: 0x33aaff,
-    visorGlow: 0x66ccff,
-    jetpackFlame: 0x00e5ff,
-    nameColor: '#33aaff'
-  },
-  {
-    suitColor: 0x85435a,
-    suitAccent: 0xff2a6d,
-    visorGlow: 0xff0077,
-    jetpackFlame: 0xff0055,
-    nameColor: '#ff2a6d'
-  }
-];
 
 export class CrowdManager {
   public container: Container;
   public avatars: Avatar[] = [];
   private nextId: number = 1;
+  public readonly MAX_CROWD: number = 200;
 
-  // Front VIP slots (3-4 prominent foreground spots near the DJ)
+  // Exact 3 Front VIP Spots (Tier 1: En çok hediye atan 3 kişi)
   private vipSlots = [
-    { x: 310, y: 1220, occupiedBy: null as Avatar | null },
-    { x: 540, y: 1260, occupiedBy: null as Avatar | null },
-    { x: 770, y: 1220, occupiedBy: null as Avatar | null },
-    { x: 420, y: 1140, occupiedBy: null as Avatar | null },
-    { x: 660, y: 1140, occupiedBy: null as Avatar | null }
+    { rank: 1, x: 540, y: 1260, occupiedBy: null as Avatar | null },
+    { rank: 2, x: 340, y: 1220, occupiedBy: null as Avatar | null },
+    { rank: 3, x: 740, y: 1220, occupiedBy: null as Avatar | null }
   ];
 
   constructor() {
@@ -68,92 +22,96 @@ export class CrowdManager {
     this.container.label = 'CrowdContainer';
   }
 
-  // Initial population of crowd across the 3 visual lanes
+  // Populate exactly 200 avatars across the 5 dance floor tiers
   public initCrowd() {
-    // 1. Back Tier (24-30 normal viewers / lurkers)
-    const backNames = [
-      'ali_kaya', 'mert_34', 'ayse_space', 'kerem_tr', 'selin_cosmic',
-      'baran_99', 'defne_star', 'burak_moon', 'ceren_g', 'deniz_x',
-      'emre_tr', 'gamze_lunar', 'hakan_06', 'irem_rave', 'kaan_ast',
-      'leyla_sky', 'oguz_v', 'pelinduran', 'serkan_m', 'tolga_dj',
-      'umut_c', 'yasemin_k', 'zafer_9', 'ozge_pulsar'
-    ];
-
-    const backCols = 8;
-    for (let i = 0; i < backNames.length; i++) {
-      const row = Math.floor(i / backCols);
-      const col = i % backCols;
-      const x = 140 + col * 115 + (row % 2) * 55 + (Math.random() - 0.5) * 30;
-      const y = 700 + row * 40 + (Math.random() - 0.5) * 15;
-
-      const palette = COLOR_PALETTES[i % COLOR_PALETTES.length];
-      const av = new Avatar(
-        `user_${this.nextId++}`,
-        backNames[i],
-        'back',
-        x,
-        y,
-        palette,
-        'moon_bounce'
-      );
+    // 1. Tier 5 (En arkada: 140 izleyiciler / lurkers)
+    const tier5Count = 140;
+    const tier5Cols = 18;
+    for (let i = 0; i < tier5Count; i++) {
+      const row = Math.floor(i / tier5Cols);
+      const col = i % tier5Cols;
+      const x = 70 + col * 55 + (row % 2) * 27 + (Math.random() - 0.5) * 15;
+      const y = 690 + row * 14 + (Math.random() - 0.5) * 10;
+      const uname = `izleyici_${i + 1}`;
+      const av = new Avatar(`user_${this.nextId++}`, uname, 'tier5_viewer', x, y);
       this.addAvatar(av);
     }
 
-    // 2. Middle Tier (Followers)
-    const midNames = ['can_99', 'merve_7', 'baris_beat', 'sinem_orbit'];
-    const midPositions = [
-      { x: 230, y: 920 },
-      { x: 440, y: 960 },
-      { x: 640, y: 960 },
-      { x: 850, y: 920 }
-    ];
-
-    for (let i = 0; i < midNames.length; i++) {
-      const pos = midPositions[i];
-      const palette = COLOR_PALETTES[(i + 2) % COLOR_PALETTES.length];
-      const av = new Avatar(
-        `user_${this.nextId++}`,
-        midNames[i],
-        'mid',
-        pos.x,
-        pos.y,
-        palette,
-        i % 2 === 0 ? 'electronic_jump' : 'zero_g_flip'
-      );
+    // 2. Tier 4 (Bir önünde: 35 takipçiler)
+    const tier4Count = 35;
+    const tier4Cols = 12;
+    for (let i = 0; i < tier4Count; i++) {
+      const row = Math.floor(i / tier4Cols);
+      const col = i % tier4Cols;
+      const x = 110 + col * 75 + (row % 2) * 35 + (Math.random() - 0.5) * 18;
+      const y = 820 + row * 28 + (Math.random() - 0.5) * 12;
+      const uname = `takipci_${i + 1}`;
+      const av = new Avatar(`user_${this.nextId++}`, uname, 'tier4_follower', x, y);
+      av.isFollower = true;
       this.addAvatar(av);
     }
 
-    // 3. Front VIP Tier (3 gifters from concept reference: efe_türk, etc.)
-    const vipNames = ['efe_türk', 'aylin_vip', 'cem_galaxy'];
-    const vipSlots = [this.vipSlots[0], this.vipSlots[1], this.vipSlots[2]];
+    // 3. Tier 3 (Bir önünde: 15 beğeni atan takipçiler)
+    const tier3Count = 15;
+    const tier3Cols = 8;
+    for (let i = 0; i < tier3Count; i++) {
+      const row = Math.floor(i / tier3Cols);
+      const col = i % tier3Cols;
+      const x = 150 + col * 110 + (row % 2) * 50 + (Math.random() - 0.5) * 20;
+      const y = 940 + row * 45 + (Math.random() - 0.5) * 15;
+      const uname = `begenen_${i + 1}`;
+      const av = new Avatar(`user_${this.nextId++}`, uname, 'tier3_liker', x, y);
+      av.isFollower = true;
+      av.likeTierTimer = 45 + Math.random() * 15; // initially in Tier 3
+      this.addAvatar(av);
+    }
 
-    for (let i = 0; i < vipNames.length; i++) {
-      const slot = vipSlots[i];
-      const palette = COLOR_PALETTES[i % COLOR_PALETTES.length];
-      const av = new Avatar(
-        `user_${this.nextId++}`,
-        vipNames[i],
-        'front',
-        slot.x,
-        slot.y,
-        palette,
-        'vip_rave'
-      );
-      av.isVip = true;
-      av.vipTimer = 25; // seconds
+    // 4. Tier 2 (Bir önünde: 7 hediye atanlar)
+    const tier2Count = 7;
+    for (let i = 0; i < tier2Count; i++) {
+      const x = 170 + i * 110 + (Math.random() - 0.5) * 25;
+      const y = 1080 + (i % 2) * 40 + (Math.random() - 0.5) * 15;
+      const uname = `hediyeci_${i + 1}`;
+      const av = new Avatar(`user_${this.nextId++}`, uname, 'tier2_gifter', x, y);
+      av.isFollower = true;
+      av.totalDiamonds = 20 + i * 10;
+      av.giftTierTimer = 6 + Math.random() * 4;
+      this.addAvatar(av);
+    }
+
+    // 5. Tier 1 (En önde: en çok hediye atan 3 kişi)
+    const top3Names = ['efe_türk', 'aylin_vip', 'cem_galaxy'];
+    const top3Diamonds = [500, 350, 200];
+    for (let i = 0; i < 3; i++) {
+      const slot = this.vipSlots[i];
+      const uname = top3Names[i];
+      const av = new Avatar(`user_${this.nextId++}`, uname, 'tier1_vip', slot.x, slot.y);
+      av.isFollower = true;
+      av.isTop3Vip = true;
+      av.totalDiamonds = top3Diamonds[i];
+      av.vipTimer = 15; // 15 seconds
       slot.occupiedBy = av;
       this.addAvatar(av);
     }
 
-    // Initial initial speech bubbles like in the reference art!
+    // Initial comic speech bubbles
     setTimeout(() => {
       this.findAvatar('efe_türk')?.say('TŞK DJ!', 5);
-      this.findAvatar('can_99')?.say('Harika!', 5);
-      this.findAvatar('merve_7')?.say('Takipteyim! 🚀', 5);
+      this.findAvatar('aylin_vip')?.say('Harika! 🚀', 5);
+      this.findAvatar('cem_galaxy')?.say('Müzik bomba! 🔥', 5);
     }, 600);
   }
 
   private addAvatar(av: Avatar) {
+    if (this.avatars.length >= this.MAX_CROWD) {
+      // Find oldest lurker in Tier 5 to replace
+      const lurkerIdx = this.avatars.findIndex(a => a.lane === 'tier5_viewer' && !a.isJumping);
+      if (lurkerIdx !== -1) {
+        const old = this.avatars[lurkerIdx];
+        this.container.removeChild(old.container);
+        this.avatars.splice(lurkerIdx, 1);
+      }
+    }
     this.avatars.push(av);
     this.container.addChild(av.container);
   }
@@ -162,163 +120,216 @@ export class CrowdManager {
     return this.avatars.find(a => a.username.toLowerCase() === username.toLowerCase());
   }
 
-  public getOrCreateAvatar(username: string, defaultLane: LaneType = 'back'): Avatar {
+  public getOrCreateAvatar(username: string, defaultLane: LaneType = 'tier5_viewer'): Avatar {
     let av = this.findAvatar(username);
     if (!av) {
-      const palette = COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
+      if (this.avatars.length >= this.MAX_CROWD) {
+        // Recycle a Tier 5 lurker
+        const lurker = this.avatars.find(a => a.lane === 'tier5_viewer' && !a.isJumping);
+        if (lurker) {
+          lurker.username = username;
+          lurker.profile = generateAvatarProfile(username);
+          lurker['buildHumanModel']();
+          lurker['nameText'].text = `@${username}`;
+          lurker.updateNameTag();
+          return lurker;
+        }
+      }
+
+      // Or spawn fresh
       const x = 120 + Math.random() * 840;
-      const y = defaultLane === 'back' ? 700 + Math.random() * 100 : 920;
-      av = new Avatar(
-        `user_${this.nextId++}`,
-        username,
-        defaultLane,
-        x,
-        y,
-        palette,
-        'moon_bounce'
-      );
+      const y = defaultLane === 'tier5_viewer' ? 700 + Math.random() * 80 : 850;
+      av = new Avatar(`user_${this.nextId++}`, username, defaultLane, x, y);
       this.addAvatar(av);
     }
     return av;
   }
 
-  // Follow event: viewer leaps from back row forward into mid row!
+  // --- TIKTOK LIVE EVENT HANDLERS ---
+
+  // 1. Join Event -> Places user in Tier 5 (İzleyiciler)
+  public handleJoin(username: string): Avatar {
+    const av = this.getOrCreateAvatar(username, 'tier5_viewer');
+    return av;
+  }
+
+  // 2. Follow Event -> Promotes to Tier 4 (Takipçiler)
   public handleFollow(username: string): Avatar {
-    let av = this.findAvatar(username);
-    if (!av) {
-      // Pick a random back-row lurker to promote!
-      const backAvatars = this.avatars.filter(a => a.lane === 'back' && !a.isJumping);
-      if (backAvatars.length > 0) {
-        av = backAvatars[Math.floor(Math.random() * backAvatars.length)];
-        av.username = username;
-        av['nameText'].text = `@${username}`;
-        av['updateNameTag']();
-      } else {
-        av = this.getOrCreateAvatar(username, 'back');
-      }
-    }
+    const av = this.getOrCreateAvatar(username, 'tier5_viewer');
+    av.isFollower = true;
 
-    // Target spot in mid tier
-    const targetX = 180 + Math.random() * 720;
-    const targetY = 880 + Math.random() * 120;
+    // Target position in Tier 4 (Y: 820-910)
+    const targetX = 120 + Math.random() * 840;
+    const targetY = 820 + Math.random() * 90;
 
-    av.danceStyle = 'electronic_jump';
-    av.jumpTo(targetX, targetY, 'mid', 1.3);
-
-    // Follower speech bubble
+    av.jumpTo(targetX, targetY, 'tier4_follower', 1.2);
     setTimeout(() => {
-      av?.say('Takipteyim! 🚀', 4);
-    }, 900);
+      av.say('Takipteyim! 🚀', 4);
+    }, 800);
 
     return av;
   }
 
-  // Gift event: moves avatar to VIP front row with high-energy FX!
+  // 3. Like Event -> Promotes to Tier 3 (Takipçi olup beğeni atanlar, 1dk / 60sn kalır)
+  public handleLike(username: string, particles: ParticleSystem): Avatar {
+    const av = this.getOrCreateAvatar(username, 'tier4_follower');
+    av.isFollower = true;
+
+    // Reset or set 60-second timer for Tier 3
+    av.likeTierTimer = 60; // 1 minute in Tier 3
+
+    if (av.lane === 'tier5_viewer' || av.lane === 'tier4_follower') {
+      const targetX = 140 + Math.random() * 800;
+      const targetY = 930 + Math.random() * 100;
+      av.jumpTo(targetX, targetY, 'tier3_liker', 1.1);
+    }
+
+    particles.triggerHearts(av.x, av.y - 20, 5);
+    return av;
+  }
+
+  // 4. Gift Event -> Tier 2 (10sn) or Top 3 VIP (Tier 1, 15sn)
   public handleGift(
     username: string,
     giftName: string,
     tier: GiftTier,
-    particles: ParticleSystem
+    particles: ParticleSystem,
+    diamonds: number = 0
   ): Avatar {
-    const av = this.getOrCreateAvatar(username, 'mid');
+    const av = this.getOrCreateAvatar(username, 'tier3_liker');
+    av.isFollower = true;
     av.giftStreak++;
-    av.isVip = true;
-    av.vipTimer = tier === 'big' ? 35 : tier === 'medium' ? 25 : 18;
-    av.danceStyle = 'vip_rave';
 
-    // Find best VIP slot
-    let slot = this.vipSlots.find(s => s.occupiedBy === null || s.occupiedBy === av);
-    if (!slot) {
-      // Evict oldest VIP slot back to mid tier
-      slot = this.vipSlots.reduce((oldest, cur) => {
-        if (!oldest.occupiedBy) return oldest;
-        if (!cur.occupiedBy) return cur;
-        return cur.occupiedBy.vipTimer < oldest.occupiedBy.vipTimer ? cur : oldest;
-      });
-
-      if (slot.occupiedBy && slot.occupiedBy !== av) {
-        const evicted = slot.occupiedBy;
-        evicted.isVip = false;
-        evicted.danceStyle = 'electronic_jump';
-        const midX = 180 + Math.random() * 720;
-        const midY = 900 + Math.random() * 100;
-        evicted.jumpTo(midX, midY, 'mid', 1.0);
-      }
-    }
-
-    slot.occupiedBy = av;
-
-    // Smooth low-G arc jump or leap into front row
-    av.jumpTo(slot.x, slot.y, 'front', 0.9);
+    const giftDiamonds = diamonds > 0 ? diamonds : tier === 'big' ? 100 : tier === 'medium' ? 30 : 5;
+    av.totalDiamonds += giftDiamonds;
 
     // Sound effect
     soundEngine.playGiftSFX(tier);
 
-    // Trigger visual FX based on tier
-    setTimeout(() => {
-      if (tier === 'small') {
-        particles.triggerSmallGift(av.x, av.y, av.colorScheme.visorGlow);
-        av.say(`🎁 ${giftName}!`, 3.5);
-      } else if (tier === 'medium') {
-        particles.triggerMediumGift(av.x, av.y, av.colorScheme.visorGlow);
-        av.say(`🔥 ${giftName} x${av.giftStreak}!`, 4);
-      } else {
-        // BIG GIFT (Space Laser + Supernova)
-        particles.triggerBigGift(av.x, av.y, av.colorScheme.visorGlow);
-        av.say(`🪐 TŞK DJ! ${giftName}! 💎`, 5);
-      }
-    }, 450);
+    // Check if user qualifies for Top 3 VIP (Tier 1)
+    this.refreshTop3VipRanking(av, particles, giftName, tier);
 
     return av;
   }
 
-  // Comment event
+  // Evaluate Top 3 VIP placement
+  private refreshTop3VipRanking(
+    currentGifter: Avatar,
+    particles: ParticleSystem,
+    giftName: string,
+    tier: GiftTier
+  ) {
+    // Sort all gifters by totalDiamonds descending
+    const gifters = [...this.avatars]
+      .filter(a => a.totalDiamonds > 0)
+      .sort((a, b) => b.totalDiamonds - a.totalDiamonds);
+
+    const top3 = gifters.slice(0, 3);
+    const isInTop3 = top3.includes(currentGifter);
+
+    if (isInTop3) {
+      // Place in Tier 1 VIP (15 sn)
+      currentGifter.isTop3Vip = true;
+      currentGifter.vipTimer = 15; // 15 seconds
+
+      // Assign VIP slot
+      const rankIdx = top3.indexOf(currentGifter);
+      const slot = this.vipSlots[rankIdx];
+      slot.occupiedBy = currentGifter;
+
+      currentGifter.jumpTo(slot.x, slot.y, 'tier1_vip', 0.95);
+      currentGifter.updateNameTag();
+
+      // VIP visual celebration
+      setTimeout(() => {
+        if (tier === 'big') {
+          particles.triggerBigGift(currentGifter.x, currentGifter.y, currentGifter.profile.glowColor);
+          currentGifter.say(`👑 TŞK DJ! ${giftName}! 💎`, 5);
+        } else if (tier === 'medium') {
+          particles.triggerMediumGift(currentGifter.x, currentGifter.y, currentGifter.profile.glowColor);
+          currentGifter.say(`🔥 ${giftName} x${currentGifter.giftStreak}!`, 4);
+        } else {
+          particles.triggerSmallGift(currentGifter.x, currentGifter.y, currentGifter.profile.glowColor);
+          currentGifter.say(`🎁 ${giftName}!`, 3.5);
+        }
+      }, 450);
+    } else {
+      // Not top 3, but sent gift: enters Tier 2 (10 sn)
+      currentGifter.isTop3Vip = false;
+      currentGifter.giftTierTimer = 10; // 10 seconds in Tier 2
+
+      const targetX = 160 + Math.random() * 760;
+      const targetY = 1070 + Math.random() * 90;
+      currentGifter.jumpTo(targetX, targetY, 'tier2_gifter', 0.95);
+      currentGifter.updateNameTag();
+
+      setTimeout(() => {
+        particles.triggerSmallGift(currentGifter.x, currentGifter.y, currentGifter.profile.glowColor);
+        currentGifter.say(`🎁 ${giftName}!`, 3.5);
+      }, 400);
+    }
+  }
+
+  // 5. Comment Event
   public handleComment(username: string, text: string): Avatar {
-    const av = this.getOrCreateAvatar(username, 'mid');
+    const av = this.getOrCreateAvatar(username, 'tier4_follower');
     av.say(text, 4.5);
     return av;
   }
 
-  // Like event
-  public handleLike(username: string, particles: ParticleSystem): Avatar {
-    const av = this.getOrCreateAvatar(username, 'mid');
-    particles.triggerHearts(av.x, av.y - 20, 4);
-    return av;
-  }
-
-  // Join event
-  public handleJoin(username: string): Avatar {
-    // Spawn in back lane
-    const x = 120 + Math.random() * 840;
-    const y = 700 + Math.random() * 100;
-    const palette = COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
-    const av = new Avatar(
-      `user_${this.nextId++}`,
-      username,
-      'back',
-      x,
-      y,
-      palette,
-      'moon_bounce'
-    );
-    this.addAvatar(av);
-    return av;
-  }
-
+  // --- UPDATE TICKER (60 FPS) ---
   public update(dt: number, time: number, kickIntensity: number, particles: ParticleSystem) {
-    // 1. Update all avatars
-    for (const av of this.avatars) {
+    // 1. Update all avatars (GPU transforms)
+    for (let i = 0; i < this.avatars.length; i++) {
+      const av = this.avatars[i];
       av.update(dt, time, kickIntensity, particles);
-    }
 
-    // 2. Free up VIP slots if timer expired and avatar left VIP
-    for (const slot of this.vipSlots) {
-      if (slot.occupiedBy && (!slot.occupiedBy.isVip || slot.occupiedBy.lane !== 'front')) {
-        slot.occupiedBy = null;
+      // Handle Tier 1 (VIP) 15-second timer
+      if (av.lane === 'tier1_vip' && !av.isJumping) {
+        av.vipTimer -= dt;
+        if (av.vipTimer <= 0) {
+          // 15 seconds expired: step back to Tier 2 (Hediye katmanı)
+          av.isTop3Vip = false;
+          av.giftTierTimer = 8;
+          const targetX = 160 + Math.random() * 760;
+          const targetY = 1070 + Math.random() * 90;
+          av.jumpTo(targetX, targetY, 'tier2_gifter', 1.0);
+          av.updateNameTag();
+        }
+      }
+
+      // Handle Tier 2 (Gifters) 10-second timer
+      if (av.lane === 'tier2_gifter' && !av.isJumping) {
+        av.giftTierTimer -= dt;
+        if (av.giftTierTimer <= 0) {
+          // 10 seconds expired: step back to Tier 3 (if likeTimer active) or Tier 4
+          if (av.likeTierTimer > 0) {
+            const targetX = 140 + Math.random() * 800;
+            const targetY = 930 + Math.random() * 100;
+            av.jumpTo(targetX, targetY, 'tier3_liker', 1.0);
+          } else {
+            const targetX = 120 + Math.random() * 840;
+            const targetY = 820 + Math.random() * 90;
+            av.jumpTo(targetX, targetY, 'tier4_follower', 1.0);
+          }
+          av.updateNameTag();
+        }
+      }
+
+      // Handle Tier 3 (Liker) 60-second timer
+      if (av.lane === 'tier3_liker' && !av.isJumping) {
+        av.likeTierTimer -= dt;
+        if (av.likeTierTimer <= 0) {
+          // 1 minute expired: step back to Tier 4 (Takipçi katmanı)
+          const targetX = 120 + Math.random() * 840;
+          const targetY = 820 + Math.random() * 90;
+          av.jumpTo(targetX, targetY, 'tier4_follower', 1.0);
+          av.updateNameTag();
+        }
       }
     }
 
-    // 3. Y-Depth Sorting: elements with higher Y (closer to foreground) appear in front!
+    // 2. Y-Depth Sorting for proper overlap
     this.container.children.sort((a, b) => a.y - b.y);
   }
 }

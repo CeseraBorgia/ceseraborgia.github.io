@@ -9,6 +9,7 @@ export class DJBooth {
   private spotlightGraphics: Graphics;
 
   private djSignText: Text;
+  private djBackText: Text;
   private time: number = 0;
   private turntableRotation: number = 0;
 
@@ -55,6 +56,28 @@ export class DJBooth {
     // 5. Animated DJ Astronaut (Back view)
     this.djCharacter = new Graphics();
     this.container.addChild(this.djCharacter);
+
+    // 6. DJ Back Jacket Name: "AvokadoBey"
+    this.djBackText = new Text({
+      text: 'AvokadoBey',
+      style: new TextStyle({
+        fontFamily: 'Impact, Orbitron, Arial Black, sans-serif',
+        fontSize: 16,
+        fontWeight: '900',
+        letterSpacing: 2,
+        fill: 0x55ff77,
+        stroke: { width: 3.5, color: 0x051d0d },
+        dropShadow: {
+          alpha: 1.0,
+          angle: 0,
+          blur: 10,
+          color: 0x00ff88,
+          distance: 0
+        }
+      })
+    });
+    this.djBackText.anchor.set(0.5);
+    this.container.addChild(this.djBackText);
   }
 
   public update(dt: number, kickIntensity: number, beatPhase: number) {
@@ -265,19 +288,36 @@ export class DJBooth {
 
     // 2. Spacesuit Body (Torso back view)
     this.djCharacter
-      .roundRect(djX - 44, djY - 20, 88, 80, 20)
+      .roundRect(djX - 48, djY - 20, 96, 80, 20)
       .fill({ color: 0x51638b })
       .stroke({ width: 3, color: 0x1f2638 });
 
-    // 3. Cyber Backpack / Oxygen Energy Battery
+    // Cyber DJ Jacket Back Plate with glowing border for "AvokadoBey"
     this.djCharacter
-      .roundRect(djX - 28, djY - 14, 56, 56, 12)
+      .roundRect(djX - 62, djY - 4, 124, 30, 8)
+      .fill({ color: 0x07150e, alpha: 0.95 })
+      .stroke({ width: 2.5, color: 0x44ff77, alpha: 0.95 + kick * 0.05 });
+
+    // Neon avocado accents on sides of nameplate
+    this.djCharacter
+      .circle(djX - 52, djY + 11, 4)
+      .fill({ color: 0x55ff77 });
+    this.djCharacter
+      .circle(djX + 52, djY + 11, 4)
+      .fill({ color: 0x55ff77 });
+
+    this.djBackText.x = djX;
+    this.djBackText.y = djY + 11;
+
+    // 3. Cyber Backpack / Oxygen Energy Battery below nameplate
+    this.djCharacter
+      .roundRect(djX - 28, djY + 30, 56, 32, 8)
       .fill({ color: 0x222a40 })
-      .stroke({ width: 2.5, color: 0x00ffff, alpha: 0.9 });
+      .stroke({ width: 2, color: 0x00ffff, alpha: 0.9 });
 
     // Backpack glowing LED energy meter
     this.djCharacter
-      .roundRect(djX - 16, djY - 2, 32, 32, 6)
+      .roundRect(djX - 16, djY + 36, 32, 20, 4)
       .fill({ color: 0x00e5ff, alpha: 0.65 + kick * 0.35 });
 
     // 4. Arms & Hands - "Hands in the Air!"
