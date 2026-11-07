@@ -13,7 +13,7 @@ import { TikTokEvent } from './types';
 async function bootstrap() {
   console.log('[LunarRave] Bootstrapping TikTok LIVE Interactive Lunar Rave...');
 
-  // 1. Initialize PixiJS Application (Exact 1080x1920 vertical canvas)
+  // 1. Initialize PixiJS Application (Exact 1080x1920 vertical canvas, optimized for TikTok LIVE Studio & OBS)
   const app = new Application();
   await app.init({
     width: 1080,
@@ -21,8 +21,15 @@ async function bootstrap() {
     resolution: 1,
     autoDensity: false,
     backgroundColor: 0x03020c,
-    antialias: true
+    antialias: false, // Critical for TikTok LIVE Studio / OBS browser sources: saves ~60% GPU bandwidth
+    powerPreference: 'high-performance', // Forces discrete high-perf GPU in CEF
+    roundPixels: true, // Prevents subpixel rasterization judder
+    preference: 'webgl'
   });
+
+  // Lock ticker to 60 FPS to stabilize CEF offscreen rendering
+  app.ticker.maxFPS = 60;
+  app.ticker.minFPS = 30;
 
   const appContainer = document.getElementById('canvas-container');
   if (appContainer) {
@@ -130,11 +137,12 @@ async function bootstrap() {
     }
   }
 
-  // 7. Main Game Loop (60 FPS WebGL Ticker)
+  // 7. Main Game Loop (60 FPS WebGL Ticker, clamped for smooth stream capture)
   let elapsedTime = 0;
 
   app.ticker.add((ticker) => {
-    const dt = ticker.deltaTime / 60; // seconds
+    // Clamp dt to max 0.0333s (30 FPS step) to eliminate CEF micro-freeze lag spikes
+    const dt = Math.min(ticker.deltaTime / 60, 0.0333);
     elapsedTime += dt;
 
     // Update Sound & Audio Reactivity

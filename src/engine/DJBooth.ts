@@ -4,7 +4,9 @@ export type DJAnimState = 'hands_up_rave' | 'turntable_scratch' | 'hype_crowd' |
 
 export class DJBooth {
   public container: Container;
+  private staticBooth: Graphics;
   private boothGraphics: Graphics;
+  private staticSpeakers: Graphics;
   private speakerLeft: Graphics;
   private speakerRight: Graphics;
   private djCharacter: Graphics;
@@ -28,15 +30,21 @@ export class DJBooth {
     this.spotlightGraphics = new Graphics();
     this.container.addChild(this.spotlightGraphics);
 
-    // 2. Speaker Towers (Left & Right)
+    // 2. Speaker Towers (Static cabinets + dynamic woofers)
+    this.staticSpeakers = new Graphics();
     this.speakerLeft = new Graphics();
     this.speakerRight = new Graphics();
+    this.container.addChild(this.staticSpeakers);
     this.container.addChild(this.speakerLeft);
     this.container.addChild(this.speakerRight);
 
-    // 3. Central DJ Desk & Consoles
+    // 3. Central DJ Desk & Consoles (Static body + dynamic screens/pads)
+    this.staticBooth = new Graphics();
     this.boothGraphics = new Graphics();
+    this.container.addChild(this.staticBooth);
     this.container.addChild(this.boothGraphics);
+
+    this.initStaticBooth();
 
     // 4. Neon Sign on Booth Front: "LUNAR RAVE - MOON CLUB"
     this.djSignText = new Text({
@@ -114,43 +122,94 @@ export class DJBooth {
     this.renderDeskSpotlights(kickIntensity);
   }
 
+  private initStaticBooth() {
+    this.staticSpeakers.clear();
+    const w = 180;
+    const h = 480;
+    const y = 1420;
+
+    const drawStaticTower = (x: number, isLeft: boolean) => {
+      // Speaker cabinet body
+      this.staticSpeakers.roundRect(x, y, w, h, 14)
+        .fill({ color: 0x141b2e })
+        .stroke({ width: 3.5, color: isLeft ? 0x00e5ff : 0xff00bb, alpha: 0.9 });
+
+      // Metal mesh texture / inner bezel
+      this.staticSpeakers.roundRect(x + 12, y + 14, w - 24, h - 28, 10)
+        .fill({ color: 0x090c14 })
+        .stroke({ width: 2, color: 0x242d44 });
+
+      // Tweeter horn at top
+      this.staticSpeakers.ellipse(x + w / 2, y + 70, 35, 20)
+        .fill({ color: 0x181f33 })
+        .stroke({ width: 2, color: 0x00ffff, alpha: 0.6 });
+
+      // Static sub backings
+      this.staticSpeakers.circle(x + w / 2, y + 185, 62).fill({ color: 0x141824 });
+      this.staticSpeakers.circle(x + w / 2, y + 335, 66).fill({ color: 0x141824 });
+    };
+
+    drawStaticTower(10, true);
+    drawStaticTower(890, false);
+
+    // Static DJ Booth consoles and desk
+    this.staticBooth.clear();
+    // Bottom-left angled DJ console (x: 0..310, y: 1720..1920)
+    this.staticBooth
+      .moveTo(0, 1720)
+      .lineTo(310, 1770)
+      .lineTo(310, 1920)
+      .lineTo(0, 1920)
+      .closePath()
+      .fill({ color: 0x13182b })
+      .stroke({ width: 3, color: 0x00e5ff, alpha: 0.8 });
+
+    // Bottom-right angled DJ console (x: 770..1080, y: 1720..1920)
+    this.staticBooth
+      .moveTo(1080, 1720)
+      .lineTo(770, 1770)
+      .lineTo(770, 1920)
+      .lineTo(1080, 1920)
+      .closePath()
+      .fill({ color: 0x13182b })
+      .stroke({ width: 3, color: 0xff00bb, alpha: 0.8 });
+
+    // Central DJ Desk Structure (Trapezoid x: 240..840, y: 1540..1820)
+    this.staticBooth
+      .moveTo(310, 1550)
+      .lineTo(770, 1550)
+      .lineTo(840, 1820)
+      .lineTo(240, 1820)
+      .closePath()
+      .fill({ color: 0x161c30 })
+      .stroke({ width: 3.5, color: 0x00ffff, alpha: 0.9 });
+
+    // Front Neon Sign Backing Plate
+    this.staticBooth
+      .roundRect(290, 1495, 500, 50, 10)
+      .fill({ color: 0x0a0f1d })
+      .stroke({ width: 3, color: 0x00f0ff, alpha: 0.95 });
+  }
+
   private renderSpeakers(kick: number) {
-    // Left Speaker Tower (x: 10..190, y: 1420..1900)
     const drawTower = (g: Graphics, x: number, isLeft: boolean) => {
       g.clear();
       const w = 180;
       const h = 480;
       const y = 1420;
 
-    // Speaker underglow halo on stage floor
-    const haloAlpha = 0.25 + kick * 0.35;
-    const haloCol = isLeft ? 0x00e5ff : 0xff00bb;
-    g.ellipse(x + w / 2, y + h, 95, 22).fill({ color: haloCol, alpha: haloAlpha });
+      // Speaker underglow halo on stage floor
+      const haloAlpha = 0.25 + kick * 0.35;
+      const haloCol = isLeft ? 0x00e5ff : 0xff00bb;
+      g.ellipse(x + w / 2, y + h, 95, 22).fill({ color: haloCol, alpha: haloAlpha });
 
-    // Speaker cabinet body
-    g.roundRect(x, y, w, h, 14)
-      .fill({ color: 0x141b2e })
-      .stroke({ width: 3.5, color: isLeft ? 0x00e5ff : 0xff00bb, alpha: 0.9 });
-
-    // Glowing vertical neon strip on outer edge
-    const stripX = isLeft ? x + 6 : x + w - 10;
-    g.roundRect(stripX, y + 16, 4, h - 32, 2)
-      .fill({ color: isLeft ? 0x00ffff : 0xff00aa, alpha: 0.85 + kick * 0.15 });
-
-    // Metal mesh texture / inner bezel
-      g.roundRect(x + 12, y + 14, w - 24, h - 28, 10)
-        .fill({ color: 0x090c14 })
-        .stroke({ width: 2, color: 0x242d44 });
-
-      // Tweeter horn at top
-      g.ellipse(x + w / 2, y + 70, 35, 20)
-        .fill({ color: 0x181f33 })
-        .stroke({ width: 2, color: 0x00ffff, alpha: 0.6 });
+      // Glowing vertical neon strip on outer edge
+      const stripX = isLeft ? x + 6 : x + w - 10;
+      g.roundRect(stripX, y + 16, 4, h - 32, 2)
+        .fill({ color: isLeft ? 0x00ffff : 0xff00aa, alpha: 0.85 + kick * 0.15 });
 
       // Subwoofer Cone 1 (Upper) - Pumping to kick
       const sub1R = 52 + kick * 14;
-      g.circle(x + w / 2, y + 185, 62)
-        .fill({ color: 0x141824 });
       g.circle(x + w / 2, y + 185, sub1R)
         .stroke({ width: 4.5, color: 0xff00bb, alpha: 0.9 + kick * 0.1 });
       g.circle(x + w / 2, y + 185, 20)
@@ -158,8 +217,6 @@ export class DJBooth {
 
       // Subwoofer Cone 2 (Lower) - Pumping to kick
       const sub2R = 55 + kick * 16;
-      g.circle(x + w / 2, y + 335, 66)
-        .fill({ color: 0x141824 });
       g.circle(x + w / 2, y + 335, sub2R)
         .stroke({ width: 4.5, color: 0x00e5ff, alpha: 0.9 + kick * 0.1 });
       g.circle(x + w / 2, y + 335, 22)
@@ -183,17 +240,6 @@ export class DJBooth {
   private renderBooth(kick: number) {
     this.boothGraphics.clear();
 
-    // 1. Perspective angled wing consoles on bottom-left and bottom-right
-    // Bottom-left angled DJ console (x: 0..310, y: 1720..1920)
-    this.boothGraphics
-      .moveTo(0, 1720)
-      .lineTo(310, 1770)
-      .lineTo(310, 1920)
-      .lineTo(0, 1920)
-      .closePath()
-      .fill({ color: 0x13182b })
-      .stroke({ width: 3, color: 0x00e5ff, alpha: 0.8 });
-
     // Oscilloscope wave on left console
     this.boothGraphics.moveTo(20, 1840);
     for (let i = 20; i < 280; i += 15) {
@@ -201,16 +247,6 @@ export class DJBooth {
       this.boothGraphics.lineTo(i, 1840 + wave);
     }
     this.boothGraphics.stroke({ width: 2.5, color: 0x00ffcc, alpha: 0.85 });
-
-    // Bottom-right angled DJ console (x: 770..1080, y: 1720..1920)
-    this.boothGraphics
-      .moveTo(1080, 1720)
-      .lineTo(770, 1770)
-      .lineTo(770, 1920)
-      .lineTo(1080, 1920)
-      .closePath()
-      .fill({ color: 0x13182b })
-      .stroke({ width: 3, color: 0xff00bb, alpha: 0.8 });
 
     // Right console turntable jog wheel
     this.boothGraphics
@@ -220,22 +256,6 @@ export class DJBooth {
     this.boothGraphics
       .ellipse(930, 1840, 35, 17)
       .fill({ color: 0x00e5ff, alpha: 0.6 });
-
-    // 2. Central DJ Desk Structure (Trapezoid x: 240..840, y: 1540..1820)
-    this.boothGraphics
-      .moveTo(310, 1550)
-      .lineTo(770, 1550)
-      .lineTo(840, 1820)
-      .lineTo(240, 1820)
-      .closePath()
-      .fill({ color: 0x161c30 })
-      .stroke({ width: 3.5, color: 0x00ffff, alpha: 0.9 });
-
-    // Front Neon Sign Backing Plate
-    this.boothGraphics
-      .roundRect(290, 1495, 500, 50, 10)
-      .fill({ color: 0x0a0f1d })
-      .stroke({ width: 3, color: 0x00f0ff, alpha: 0.95 });
 
     // Front DJ Desk Underglow Neon Wash
     this.boothGraphics

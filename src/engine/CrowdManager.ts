@@ -20,6 +20,8 @@ export class CrowdManager {
     { rank: 2, x: 850, y: 1540, occupiedBy: null as Avatar | null }  // Right DJ Stage Wing
   ];
 
+  private depthSortCounter: number = 0;
+
   constructor() {
     this.container = new Container();
     this.container.label = 'CrowdContainer';
@@ -336,6 +338,12 @@ export class CrowdManager {
     }
 
     // 2. Y-Depth Sorting for proper spatial overlap
-    this.container.children.sort((a, b) => a.y - b.y);
+    // Optimization for TikTok LIVE Studio: Only sort when avatars are leaping between lanes or throttle to every 10 frames
+    this.depthSortCounter++;
+    const hasJumping = this.avatars.some(a => a.isJumping);
+    if (hasJumping || this.depthSortCounter >= 10) {
+      this.depthSortCounter = 0;
+      this.container.children.sort((a, b) => a.y - b.y);
+    }
   }
 }

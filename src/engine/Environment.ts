@@ -20,18 +20,22 @@ interface Comet {
 
 export class Environment {
   public container: Container;
+  private staticSpaceGraphics: Graphics;
   private spaceGraphics: Graphics;
   private auroraGraphics: Graphics;
   private earthContainer: Container;
   private earthGlobe: Graphics;
   private earthClouds: Graphics;
   private earthAtmosphere: Graphics;
+  private staticGroundGraphics: Graphics;
   private groundGraphics: Graphics;
   private dancefloorGraphics: Graphics;
+  private staticAssetsGraphics: Graphics;
   private lunarAssetsGraphics: Graphics;
   private laserGraphics: Graphics;
   private stageWashGraphics: Graphics;
   private cryoGraphics: Graphics;
+  private staticArchGraphics: Graphics;
   private stageArchGraphics: Graphics;
   private droneGraphics: Graphics;
 
@@ -49,8 +53,10 @@ export class Environment {
     this.container = new Container();
     this.container.label = 'EnvironmentContainer';
 
-    // 1. Deep Space & Cosmos layer
+    // 1. Deep Space & Cosmos layer (Static base + dynamic comets)
+    this.staticSpaceGraphics = new Graphics();
     this.spaceGraphics = new Graphics();
+    this.container.addChild(this.staticSpaceGraphics);
     this.container.addChild(this.spaceGraphics);
 
     // 2. Waving Cosmic Aurora Curtains (Lunar Northern Lights)
@@ -73,24 +79,30 @@ export class Environment {
     this.earthContainer.addChild(this.earthGlobe);
     this.earthContainer.addChild(this.earthClouds);
 
-    // 5. Lunar Surface & Regolith Terrain
+    // 5. Lunar Surface & Regolith Terrain (Static craters/mountains + dynamic horizon pulse)
+    this.staticGroundGraphics = new Graphics();
     this.groundGraphics = new Graphics();
+    this.container.addChild(this.staticGroundGraphics);
     this.container.addChild(this.groundGraphics);
 
     // 6. Tiered Holographic Cyber Dance Floor (Interactive LED Panels & Circuit Traces)
     this.dancefloorGraphics = new Graphics();
     this.container.addChild(this.dancefloorGraphics);
 
-    // 7. Lunar Assets (Apollo Lander, Lunar Rover, Bio-Dome, Moon Rocks & Flag)
+    // 7. Lunar Assets (Static Apollo Lander, Rover, Rocks + dynamic flag/beacon)
+    this.staticAssetsGraphics = new Graphics();
     this.lunarAssetsGraphics = new Graphics();
+    this.container.addChild(this.staticAssetsGraphics);
     this.container.addChild(this.lunarAssetsGraphics);
 
     // 8. Stage Wash & Floor Floodlights
     this.stageWashGraphics = new Graphics();
     this.container.addChild(this.stageWashGraphics);
 
-    // 9. Curved Cyber Stage Gateway Arch with Moving Heads & Festival Banners
+    // 9. Curved Cyber Stage Gateway Arch with Moving Heads & Festival Banners (Static arch + dynamic dots)
+    this.staticArchGraphics = new Graphics();
     this.stageArchGraphics = new Graphics();
+    this.container.addChild(this.staticArchGraphics);
     this.container.addChild(this.stageArchGraphics);
     this.setupFestivalBanners();
 
@@ -105,6 +117,9 @@ export class Environment {
     // 12. Stage Edge CO2 Cryo Smoke Jets & Plasma Mist
     this.cryoGraphics = new Graphics();
     this.container.addChild(this.cryoGraphics);
+
+    // Initialize all static background layers ONCE (Enormous CPU savings for OBS / TikTok LIVE Studio)
+    this.initStaticLayers();
   }
 
   private initStars() {
@@ -183,6 +198,292 @@ export class Environment {
     this.container.addChild(rightText);
   }
 
+  // =========================================================================
+  // STATIC BACKGROUND LAYERS (Rendered ONCE at startup - 0 per-frame overhead)
+  // =========================================================================
+  private initStaticLayers() {
+    this.initStaticSpace();
+    this.initStaticEarth();
+    this.initStaticGround();
+    this.initStaticAssets();
+    this.initStaticArch();
+  }
+
+  private initStaticSpace() {
+    this.staticSpaceGraphics.clear();
+    // Deep Space canvas background
+    this.staticSpaceGraphics.rect(0, 0, 1080, 1920).fill({ color: 0x02010c });
+
+    // Multi-color glowing nebulae (Cyan, Violet, Hot Magenta, Deep Space Blue)
+    this.staticSpaceGraphics.ellipse(260, 240, 360, 230).fill({ color: 0x2b095e, alpha: 0.55 });
+    this.staticSpaceGraphics.ellipse(820, 280, 340, 210).fill({ color: 0x052d68, alpha: 0.55 });
+    this.staticSpaceGraphics.ellipse(540, 150, 300, 160).fill({ color: 0x6e0885, alpha: 0.42 });
+    this.staticSpaceGraphics.ellipse(540, 380, 540, 150).fill({ color: 0x005573, alpha: 0.32 });
+
+    // Base Stars
+    for (const s of this.stars) {
+      this.staticSpaceGraphics.circle(s.x, s.y, s.size).fill({ color: s.color, alpha: s.baseAlpha * 0.85 });
+
+      if (s.size > 3) {
+        this.staticSpaceGraphics
+          .moveTo(s.x - s.size * 2, s.y)
+          .lineTo(s.x + s.size * 2, s.y)
+          .stroke({ width: 0.8, color: 0xffffff, alpha: s.baseAlpha * 0.7 });
+        this.staticSpaceGraphics
+          .moveTo(s.x, s.y - s.size * 2)
+          .lineTo(s.x, s.y + s.size * 2)
+          .stroke({ width: 0.8, color: 0xffffff, alpha: s.baseAlpha * 0.7 });
+      }
+    }
+
+    // Saturn
+    const saturnX = 180;
+    const saturnY = 125;
+    const saturnR = 36;
+    this.staticSpaceGraphics.circle(saturnX, saturnY, saturnR + 14).fill({ color: 0xaa00ff, alpha: 0.15 });
+    this.staticSpaceGraphics
+      .ellipse(saturnX, saturnY, saturnR * 2.5, saturnR * 0.65)
+      .stroke({ width: 7, color: 0xd4af37, alpha: 0.55 });
+    this.staticSpaceGraphics
+      .ellipse(saturnX, saturnY, saturnR * 2.1, saturnR * 0.52)
+      .stroke({ width: 4, color: 0x00f0ff, alpha: 0.7 });
+    this.staticSpaceGraphics.circle(saturnX, saturnY, saturnR).fill({ color: 0xd9b36c });
+    this.staticSpaceGraphics.ellipse(saturnX, saturnY - 8, saturnR * 0.95, 6).fill({ color: 0xb58b41, alpha: 0.6 });
+    this.staticSpaceGraphics.ellipse(saturnX, saturnY + 8, saturnR * 0.95, 7).fill({ color: 0x8f652b, alpha: 0.6 });
+    this.staticSpaceGraphics.ellipse(saturnX - 10, saturnY + 8, saturnR * 0.9, saturnR * 0.85).fill({ color: 0x000000, alpha: 0.4 });
+    this.staticSpaceGraphics
+      .ellipse(saturnX, saturnY, saturnR * 2.5, saturnR * 0.65)
+      .stroke({ width: 7, color: 0xf5d77f, alpha: 0.85 });
+    this.staticSpaceGraphics
+      .ellipse(saturnX, saturnY, saturnR * 2.1, saturnR * 0.52)
+      .stroke({ width: 4, color: 0x00ffff, alpha: 0.9 });
+
+    // Crescent Moon with cyber rings
+    const moonX = 890;
+    const moonY = 150;
+    const moonR = 54;
+    this.staticSpaceGraphics.circle(moonX, moonY, moonR + 20).fill({ color: 0xffea00, alpha: 0.14 });
+    this.staticSpaceGraphics.circle(moonX, moonY, moonR + 9).fill({ color: 0xfffae6, alpha: 0.25 });
+    this.staticSpaceGraphics.circle(moonX, moonY, moonR).fill({ color: 0xfffae0 });
+    this.staticSpaceGraphics.circle(moonX - 24, moonY - 12, moonR * 0.96).fill({ color: 0x02010c });
+    this.staticSpaceGraphics.ellipse(moonX, moonY, moonR * 1.55, moonR * 0.42).stroke({ width: 3.5, color: 0x00f0ff, alpha: 0.95 });
+    this.staticSpaceGraphics.ellipse(moonX, moonY, moonR * 1.3, moonR * 0.32).stroke({ width: 2, color: 0xff00bb, alpha: 0.85 });
+  }
+
+  private initStaticEarth() {
+    const r = 115;
+    this.earthAtmosphere.clear();
+    this.earthAtmosphere.circle(0, 0, r + 26).fill({ color: 0x00e5ff, alpha: 0.14 });
+    this.earthAtmosphere.circle(0, 0, r + 13).fill({ color: 0x0077ff, alpha: 0.28 });
+    this.earthAtmosphere.circle(0, 0, r + 3).stroke({ width: 3.5, color: 0x88eeff, alpha: 0.95 });
+  }
+
+  private initStaticGround() {
+    this.staticGroundGraphics.clear();
+    const horizonY = 660;
+
+    // 1. Distant mountain ridge 1 (Back)
+    this.staticGroundGraphics
+      .moveTo(0, horizonY + 10)
+      .bezierCurveTo(240, horizonY - 45, 480, horizonY + 10, 720, horizonY - 35)
+      .bezierCurveTo(890, horizonY - 50, 990, horizonY + 5, 1080, horizonY + 5)
+      .lineTo(1080, 1920)
+      .lineTo(0, 1920)
+      .closePath()
+      .fill({ color: 0x1b233a });
+
+    this.staticGroundGraphics
+      .moveTo(0, horizonY + 10)
+      .bezierCurveTo(240, horizonY - 45, 480, horizonY + 10, 720, horizonY - 35)
+      .bezierCurveTo(890, horizonY - 50, 990, horizonY + 5, 1080, horizonY + 5)
+      .stroke({ width: 2.5, color: 0x4a5d85, alpha: 0.75 });
+
+    // 2. Midground lunar ridge 2 (Silver-grey regolith soil)
+    this.staticGroundGraphics
+      .moveTo(0, horizonY + 40)
+      .bezierCurveTo(320, horizonY + 15, 680, horizonY + 48, 1080, horizonY + 25)
+      .lineTo(1080, 1920)
+      .lineTo(0, 1920)
+      .closePath()
+      .fill({ color: 0x222a44 });
+
+    // Base horizon line
+    this.staticGroundGraphics
+      .moveTo(0, horizonY + 40)
+      .bezierCurveTo(320, horizonY + 15, 680, horizonY + 48, 1080, horizonY + 25)
+      .stroke({ width: 3.5, color: 0x00f0ff, alpha: 0.75 });
+
+    // 3. Forehead Lunar Ground Soil
+    this.staticGroundGraphics
+      .moveTo(0, horizonY + 70)
+      .bezierCurveTo(380, horizonY + 55, 760, horizonY + 75, 1080, horizonY + 60)
+      .lineTo(1080, 1920)
+      .lineTo(0, 1920)
+      .closePath()
+      .fill({ color: 0x151b2e });
+
+    // Futuristic contour elevation curves
+    this.staticGroundGraphics
+      .moveTo(0, 740)
+      .bezierCurveTo(280, 720, 640, 750, 1080, 730)
+      .stroke({ width: 1.5, color: 0x7700ff, alpha: 0.45 });
+    this.staticGroundGraphics
+      .moveTo(0, 830)
+      .bezierCurveTo(360, 810, 780, 840, 1080, 820)
+      .stroke({ width: 1.5, color: 0x00d4ff, alpha: 0.4 });
+    this.staticGroundGraphics
+      .moveTo(0, 930)
+      .bezierCurveTo(300, 950, 740, 920, 1080, 940)
+      .stroke({ width: 2, color: 0xff00bb, alpha: 0.45 });
+
+    // 4. Lunar Craters
+    const craters = [
+      { x: 130, y: 725, rx: 70, ry: 26, rimCol: 0x00ffff, innerCol: 0x003355 },
+      { x: 940, y: 735, rx: 85, ry: 30, rimCol: 0xff00bb, innerCol: 0x440033 },
+      { x: 55, y: 920, rx: 100, ry: 36, rimCol: 0x00ff88, innerCol: 0x003319 },
+      { x: 1025, y: 950, rx: 95, ry: 34, rimCol: 0xaa00ff, innerCol: 0x2a0044 },
+      { x: 240, y: 1280, rx: 120, ry: 42, rimCol: 0x00f0ff, innerCol: 0x002244 },
+      { x: 840, y: 1310, rx: 130, ry: 46, rimCol: 0xff0088, innerCol: 0x3d0020 }
+    ];
+
+    for (const c of craters) {
+      this.staticGroundGraphics
+        .ellipse(c.x, c.y, c.rx, c.ry)
+        .fill({ color: c.innerCol, alpha: 0.85 });
+      this.staticGroundGraphics
+        .ellipse(c.x, c.y - 2, c.rx + 2, c.ry + 2)
+        .stroke({ width: 2.5, color: 0x6e88b8, alpha: 0.65 });
+      this.staticGroundGraphics
+        .ellipse(c.x, c.y, c.rx, c.ry)
+        .stroke({ width: 3.5, color: c.rimCol, alpha: 0.85 });
+      this.staticGroundGraphics
+        .circle(c.x - c.rx * 0.3, c.y, 5)
+        .fill({ color: c.rimCol, alpha: 0.95 });
+      this.staticGroundGraphics
+        .circle(c.x + c.rx * 0.25, c.y + 2, 4)
+        .fill({ color: 0xffffff, alpha: 0.9 });
+    }
+
+    // 5. Boot prints
+    const drawBootPrint = (bx: number, by: number) => {
+      this.staticGroundGraphics
+        .ellipse(bx, by, 7, 13)
+        .stroke({ width: 1.5, color: 0x00e5ff, alpha: 0.55 });
+      for (let r = -8; r <= 8; r += 4) {
+        this.staticGroundGraphics
+          .moveTo(bx - 4, by + r)
+          .lineTo(bx + 4, by + r)
+          .stroke({ width: 1.2, color: 0x00e5ff, alpha: 0.45 });
+      }
+    };
+    drawBootPrint(180, 860);
+    drawBootPrint(205, 895);
+    drawBootPrint(870, 880);
+    drawBootPrint(845, 915);
+  }
+
+  private initStaticAssets() {
+    this.staticAssetsGraphics.clear();
+
+    // 1. Apollo LEM
+    const lemX = 90;
+    const lemY = 645;
+    this.staticAssetsGraphics.moveTo(lemX - 15, lemY - 10).lineTo(lemX - 45, lemY + 22).stroke({ width: 3, color: 0xc8a432 });
+    this.staticAssetsGraphics.ellipse(lemX - 45, lemY + 22, 10, 4).fill({ color: 0xffd700 });
+    this.staticAssetsGraphics.moveTo(lemX + 15, lemY - 10).lineTo(lemX + 45, lemY + 22).stroke({ width: 3, color: 0xc8a432 });
+    this.staticAssetsGraphics.ellipse(lemX + 45, lemY + 22, 10, 4).fill({ color: 0xffd700 });
+    this.staticAssetsGraphics.roundRect(lemX - 25, lemY - 22, 50, 24, 4).fill({ color: 0xd4af37 }).stroke({ width: 2, color: 0xffea00 });
+    this.staticAssetsGraphics.rect(lemX - 18, lemY - 18, 14, 16).stroke({ width: 1, color: 0xffffff, alpha: 0.7 });
+    this.staticAssetsGraphics.rect(lemX + 4, lemY - 18, 14, 16).stroke({ width: 1, color: 0xffffff, alpha: 0.7 });
+    this.staticAssetsGraphics.moveTo(lemX - 8, lemY + 2).lineTo(lemX + 8, lemY + 2).lineTo(lemX + 12, lemY + 12).lineTo(lemX - 12, lemY + 12).closePath().fill({ color: 0x111625 }).stroke({ width: 1.5, color: 0x00f0ff });
+    this.staticAssetsGraphics.roundRect(lemX - 20, lemY - 45, 40, 24, 6).fill({ color: 0x33415c }).stroke({ width: 2, color: 0x111625 });
+    this.staticAssetsGraphics.moveTo(lemX - 14, lemY - 38).lineTo(lemX - 4, lemY - 38).lineTo(lemX - 8, lemY - 30).closePath().fill({ color: 0x00ffff, alpha: 0.95 });
+    this.staticAssetsGraphics.moveTo(lemX + 4, lemY - 38).lineTo(lemX + 14, lemY - 38).lineTo(lemX + 8, lemY - 30).closePath().fill({ color: 0x00ffff, alpha: 0.95 });
+    this.staticAssetsGraphics.moveTo(lemX, lemY - 45).lineTo(lemX, lemY - 60).stroke({ width: 1.5, color: 0xffffff });
+    this.staticAssetsGraphics.circle(lemX, lemY - 60, 2.5).fill({ color: 0x00ff88 });
+
+    // 2. Flagpole
+    this.staticAssetsGraphics.moveTo(290, 642).lineTo(290, 642 - 55).stroke({ width: 2.5, color: 0xe0e0e0 });
+
+    // 3. Bio-Dome Base
+    const domeX = 790;
+    const domeY = 645;
+    this.staticAssetsGraphics.ellipse(domeX, domeY, 56, 32).fill({ color: 0x091428, alpha: 0.9 }).stroke({ width: 2.5, color: 0x00e5ff, alpha: 0.9 });
+    this.staticAssetsGraphics.ellipse(domeX, domeY - 6, 28, 16).fill({ color: 0x00ffaa, alpha: 0.5 }).stroke({ width: 2, color: 0xffffff });
+    this.staticAssetsGraphics.moveTo(domeX, domeY - 32).lineTo(domeX, domeY - 65).stroke({ width: 2.5, color: 0x00e5ff });
+    this.staticAssetsGraphics.ellipse(domeX, domeY - 65, 14, 6).stroke({ width: 2, color: 0xffea00 });
+
+    // 4. Lunar Rover Base
+    const roverX = 990;
+    const roverY = 648;
+    this.staticAssetsGraphics.circle(roverX - 18, roverY + 10, 8).stroke({ width: 2, color: 0x99aacc });
+    this.staticAssetsGraphics.circle(roverX + 18, roverY + 10, 8).stroke({ width: 2, color: 0x99aacc });
+    this.staticAssetsGraphics.roundRect(roverX - 22, roverY - 4, 44, 12, 3).fill({ color: 0x242d44 }).stroke({ width: 1.5, color: 0x00ffff });
+    this.staticAssetsGraphics.moveTo(roverX + 2, roverY - 4).lineTo(roverX + 2, roverY - 18).stroke({ width: 1.5, color: 0xffea00 });
+    this.staticAssetsGraphics.ellipse(roverX + 2, roverY - 18, 9, 4).stroke({ width: 1.5, color: 0xffea00 });
+
+    // 5. Moon Rocks & Crystals
+    const drawMoonRock = (rx: number, ry: number, rw: number, rh: number, crystalCol: number) => {
+      this.staticAssetsGraphics.ellipse(rx, ry, rw, rh).fill({ color: 0x222a44 }).stroke({ width: 1.5, color: 0x4d5f85 });
+      this.staticAssetsGraphics.ellipse(rx - rw * 0.2, ry - rh * 0.2, rw * 0.5, rh * 0.4).fill({ color: 0x364463 });
+      this.staticAssetsGraphics.moveTo(rx - rw * 0.4, ry).lineTo(rx, ry + rh * 0.3).lineTo(rx + rw * 0.4, ry - rh * 0.2).stroke({ width: 2, color: crystalCol, alpha: 0.85 });
+    };
+    drawMoonRock(50, 780, 24, 15, 0x00ffff);
+    drawMoonRock(1030, 810, 28, 17, 0xff00bb);
+    drawMoonRock(40, 1080, 32, 18, 0x00ff88);
+    drawMoonRock(1040, 1120, 34, 19, 0xffea00);
+  }
+
+  private initStaticArch() {
+    this.staticArchGraphics.clear();
+
+    // 1. Curved Overhead Stage Arch Steel Beam
+    this.staticArchGraphics
+      .moveTo(80, 680)
+      .bezierCurveTo(180, 420, 900, 420, 1000, 680)
+      .stroke({ width: 8, color: 0x1f2740 });
+
+    // 2. Central Golden Holographic Moon Rave Crest (At top center: 540, 435)
+    const crestX = 540;
+    const crestY = 435;
+    this.staticArchGraphics
+      .circle(crestX, crestY, 26)
+      .fill({ color: 0x050d1a, alpha: 0.95 })
+      .stroke({ width: 3, color: 0xffea00, alpha: 0.95 });
+    this.staticArchGraphics.circle(crestX, crestY, 14).fill({ color: 0xffea00 });
+    this.staticArchGraphics.circle(crestX - 6, crestY - 3, 12).fill({ color: 0x050d1a });
+    this.staticArchGraphics.moveTo(crestX - 26, crestY).lineTo(crestX - 60, crestY - 8).lineTo(crestX - 24, crestY + 8).closePath().fill({ color: 0x00f0ff, alpha: 0.85 });
+    this.staticArchGraphics.moveTo(crestX + 26, crestY).lineTo(crestX + 60, crestY - 8).lineTo(crestX + 24, crestY + 8).closePath().fill({ color: 0x00f0ff, alpha: 0.85 });
+
+    // 3. Moving Head Fixture Housings
+    const movingHeadSpots = [0.25, 0.40, 0.60, 0.75];
+    for (let m = 0; m < movingHeadSpots.length; m++) {
+      const p = movingHeadSpots[m];
+      const mx = 80 + (1000 - 80) * p;
+      const my = 680 - Math.sin(p * Math.PI) * 245;
+      this.staticArchGraphics.roundRect(mx - 10, my - 6, 20, 16, 4).fill({ color: 0x0f1526 }).stroke({ width: 2, color: 0x00ffff });
+    }
+
+    // 4. Side Truss Towers
+    const drawTruss = (x: number, y: number, w: number, h: number) => {
+      this.staticArchGraphics.rect(x, y, 6, h).fill({ color: 0x222a44 });
+      this.staticArchGraphics.rect(x + w - 6, y, 6, h).fill({ color: 0x222a44 });
+      const steps = 6;
+      const stepH = h / steps;
+      for (let i = 0; i < steps; i++) {
+        const sy = y + i * stepH;
+        this.staticArchGraphics.moveTo(x + 3, sy).lineTo(x + w - 3, sy + stepH).stroke({ width: 2, color: 0x3d4a6e });
+        this.staticArchGraphics.moveTo(x + w - 3, sy).lineTo(x + 3, sy + stepH).stroke({ width: 2, color: 0x3d4a6e });
+      }
+    };
+    drawTruss(80, 480, 180, 200);
+    drawTruss(820, 480, 180, 200);
+
+    // Neon Banners frames
+    this.staticArchGraphics.roundRect(70, 475, 220, 52, 10).fill({ color: 0x071120 }).stroke({ width: 2.5, color: 0x00ffff, alpha: 0.9 });
+    this.staticArchGraphics.roundRect(790, 475, 220, 52, 10).fill({ color: 0x160720 }).stroke({ width: 2.5, color: 0xff00bb, alpha: 0.9 });
+  }
+
   public update(dt: number, kickIntensity: number) {
     this.time += dt;
     this.earthRotation += dt * 0.12;
@@ -231,46 +532,9 @@ export class Environment {
     this.renderCryoJets(kickIntensity);
   }
 
-  // Deep Cosmos, Nebulae, Stars, Saturn with Rings & Comets
+  // Deep Cosmos Shooting Comets (Base space, nebulae, stars, saturn are static in staticSpaceGraphics)
   private renderSpace() {
     this.spaceGraphics.clear();
-    // Deep Space canvas background
-    this.spaceGraphics
-      .rect(0, 0, 1080, 1920)
-      .fill({ color: 0x02010c });
-
-    // Multi-color glowing nebulae (Cyan, Violet, Hot Magenta, Deep Space Blue)
-    this.spaceGraphics
-      .ellipse(260, 240, 360, 230)
-      .fill({ color: 0x2b095e, alpha: 0.55 });
-    this.spaceGraphics
-      .ellipse(820, 280, 340, 210)
-      .fill({ color: 0x052d68, alpha: 0.55 });
-    this.spaceGraphics
-      .ellipse(540, 150, 300, 160)
-      .fill({ color: 0x6e0885, alpha: 0.42 });
-    this.spaceGraphics
-      .ellipse(540, 380, 540, 150)
-      .fill({ color: 0x005573, alpha: 0.32 });
-
-    // Twinkling Stars
-    for (const s of this.stars) {
-      const alpha = s.baseAlpha * (0.65 + 0.35 * Math.sin(this.time * s.blinkSpeed));
-      this.spaceGraphics
-        .circle(s.x, s.y, s.size)
-        .fill({ color: s.color, alpha });
-
-      if (s.size > 3) {
-        this.spaceGraphics
-          .moveTo(s.x - s.size * 2, s.y)
-          .lineTo(s.x + s.size * 2, s.y)
-          .stroke({ width: 0.8, color: 0xffffff, alpha: alpha * 0.8 });
-        this.spaceGraphics
-          .moveTo(s.x, s.y - s.size * 2)
-          .lineTo(s.x + s.size * 2, s.y)
-          .stroke({ width: 0.8, color: 0xffffff, alpha: alpha * 0.8 });
-      }
-    }
 
     // Shooting comets
     for (let i = this.comets.length - 1; i >= 0; i--) {
@@ -289,56 +553,6 @@ export class Environment {
         .stroke({ width: 2, color: 0x00ffff, alpha: c.alpha });
       this.spaceGraphics.circle(c.x, c.y, 2.5).fill({ color: 0xffffff, alpha: c.alpha });
     }
-
-    // =========================================================================
-    // GAS GIANT SATURN WITH RINGS (Top Left, x: 180, y: 130)
-    // =========================================================================
-    const saturnX = 180;
-    const saturnY = 125;
-    const saturnR = 36;
-    // Saturn atmospheric glow
-    this.spaceGraphics.circle(saturnX, saturnY, saturnR + 14).fill({ color: 0xaa00ff, alpha: 0.15 });
-
-    // Back half of planetary rings
-    this.spaceGraphics
-      .ellipse(saturnX, saturnY, saturnR * 2.5, saturnR * 0.65)
-      .stroke({ width: 7, color: 0xd4af37, alpha: 0.55 });
-    this.spaceGraphics
-      .ellipse(saturnX, saturnY, saturnR * 2.1, saturnR * 0.52)
-      .stroke({ width: 4, color: 0x00f0ff, alpha: 0.7 });
-
-    // Saturn Planet Globe (Golden amber banded gas giant)
-    this.spaceGraphics.circle(saturnX, saturnY, saturnR).fill({ color: 0xd9b36c });
-    // Cloud band stripes
-    this.spaceGraphics.ellipse(saturnX, saturnY - 8, saturnR * 0.95, 6).fill({ color: 0xb58b41, alpha: 0.6 });
-    this.spaceGraphics.ellipse(saturnX, saturnY + 8, saturnR * 0.95, 7).fill({ color: 0x8f652b, alpha: 0.6 });
-    // Planet shadow
-    this.spaceGraphics.ellipse(saturnX - 10, saturnY + 8, saturnR * 0.9, saturnR * 0.85).fill({ color: 0x000000, alpha: 0.4 });
-
-    // Front half of rings
-    this.spaceGraphics
-      .ellipse(saturnX, saturnY, saturnR * 2.5, saturnR * 0.65)
-      .stroke({ width: 7, color: 0xf5d77f, alpha: 0.85 });
-    this.spaceGraphics
-      .ellipse(saturnX, saturnY, saturnR * 2.1, saturnR * 0.52)
-      .stroke({ width: 4, color: 0x00ffff, alpha: 0.9 });
-
-    // =========================================================================
-    // GLOWING CRESCENT MOON WITH CYBER ORBITAL RING (Top Right, x: 890, y: 150)
-    // =========================================================================
-    const moonX = 890;
-    const moonY = 150;
-    const moonR = 54;
-    // Outer atmospheric lunar bloom
-    this.spaceGraphics.circle(moonX, moonY, moonR + 20).fill({ color: 0xffea00, alpha: 0.14 });
-    this.spaceGraphics.circle(moonX, moonY, moonR + 9).fill({ color: 0xfffae6, alpha: 0.25 });
-    // Golden Moon surface
-    this.spaceGraphics.circle(moonX, moonY, moonR).fill({ color: 0xfffae0 });
-    // Shadow cutout creating iconic 3D crescent
-    this.spaceGraphics.circle(moonX - 24, moonY - 12, moonR * 0.96).fill({ color: 0x02010c });
-    // Neon Cyber Orbital Ring around the Moon
-    this.spaceGraphics.ellipse(moonX, moonY, moonR * 1.55, moonR * 0.42).stroke({ width: 3.5, color: 0x00f0ff, alpha: 0.95 });
-    this.spaceGraphics.ellipse(moonX, moonY, moonR * 1.3, moonR * 0.32).stroke({ width: 2, color: 0xff00bb, alpha: 0.85 });
   }
 
   // Waving Cosmic Aurora Waves in the Lunar Sky
@@ -372,21 +586,9 @@ export class Environment {
   }
 
   private renderEarth() {
-    const r = 115; // Earth radius
+    const r = 115; // Earth radius (Atmosphere is in static earthAtmosphere)
 
-    // 1. Atmosphere halo (vibrant cyan/blue bloom)
-    this.earthAtmosphere.clear();
-    this.earthAtmosphere
-      .circle(0, 0, r + 26)
-      .fill({ color: 0x00e5ff, alpha: 0.14 });
-    this.earthAtmosphere
-      .circle(0, 0, r + 13)
-      .fill({ color: 0x0077ff, alpha: 0.28 });
-    this.earthAtmosphere
-      .circle(0, 0, r + 3)
-      .stroke({ width: 3.5, color: 0x88eeff, alpha: 0.95 });
-
-    // 2. Earth Globe base (Deep Blue Ocean)
+    // 1. Earth Globe base (Deep Blue Ocean)
     this.earthGlobe.clear();
     this.earthGlobe
       .circle(0, 0, r)
@@ -419,7 +621,7 @@ export class Environment {
       .ellipse(-45, 20, r * 0.9, r * 0.9)
       .fill({ color: 0x000000, alpha: 0.38 });
 
-    // 3. Clouds layer
+    // 2. Clouds layer
     this.earthClouds.clear();
     const cRot = this.earthRotation * 1.35;
     this.earthClouds
@@ -433,118 +635,16 @@ export class Environment {
       .fill({ color: 0xffffff, alpha: 0.55 });
   }
 
-  // Authentic Lunar Surface with Regolith, Craters & Topography Curves
+  // Authentic Lunar Surface (Craters, ridges, contour lines are in staticGroundGraphics)
   private renderLunarGround(kickIntensity: number) {
     this.groundGraphics.clear();
-
-    const horizonY = 660;
-
-    // 1. Distant lunar mountain ridge 1 (Back)
-    this.groundGraphics
-      .moveTo(0, horizonY + 10)
-      .bezierCurveTo(240, horizonY - 45, 480, horizonY + 10, 720, horizonY - 35)
-      .bezierCurveTo(890, horizonY - 50, 990, horizonY + 5, 1080, horizonY + 5)
-      .lineTo(1080, 1920)
-      .lineTo(0, 1920)
-      .closePath()
-      .fill({ color: 0x1b233a });
-
-    // Ridge 1 sunlit crest highlight
-    this.groundGraphics
-      .moveTo(0, horizonY + 10)
-      .bezierCurveTo(240, horizonY - 45, 480, horizonY + 10, 720, horizonY - 35)
-      .bezierCurveTo(890, horizonY - 50, 990, horizonY + 5, 1080, horizonY + 5)
-      .stroke({ width: 2.5, color: 0x4a5d85, alpha: 0.75 });
-
-    // 2. Midground lunar ridge 2 (Silver-grey lunar regolith soil)
-    this.groundGraphics
-      .moveTo(0, horizonY + 40)
-      .bezierCurveTo(320, horizonY + 15, 680, horizonY + 48, 1080, horizonY + 25)
-      .lineTo(1080, 1920)
-      .lineTo(0, 1920)
-      .closePath()
-      .fill({ color: 0x222a44 });
-
-    // Glowing cyan horizon light band
-    this.groundGraphics
-      .moveTo(0, horizonY + 40)
-      .bezierCurveTo(320, horizonY + 15, 680, horizonY + 48, 1080, horizonY + 25)
-      .stroke({ width: 4, color: 0x00f0ff, alpha: 0.8 + kickIntensity * 0.2 });
-
-    // 3. Forehead Lunar Ground Soil (Textured dark slate & silver dust)
-    this.groundGraphics
-      .moveTo(0, horizonY + 70)
-      .bezierCurveTo(380, horizonY + 55, 760, horizonY + 75, 1080, horizonY + 60)
-      .lineTo(1080, 1920)
-      .lineTo(0, 1920)
-      .closePath()
-      .fill({ color: 0x151b2e });
-
-    // Glowing futuristic topographic elevation contour lines on the lunar soil
-    this.groundGraphics
-      .moveTo(0, 740)
-      .bezierCurveTo(280, 720, 640, 750, 1080, 730)
-      .stroke({ width: 1.5, color: 0x7700ff, alpha: 0.45 });
-    this.groundGraphics
-      .moveTo(0, 830)
-      .bezierCurveTo(360, 810, 780, 840, 1080, 820)
-      .stroke({ width: 1.5, color: 0x00d4ff, alpha: 0.4 });
-    this.groundGraphics
-      .moveTo(0, 930)
-      .bezierCurveTo(300, 950, 740, 920, 1080, 940)
-      .stroke({ width: 2, color: 0xff00bb, alpha: 0.45 });
-
-    // 4. Prominent Lunar Craters with glowing neon crystal rims & molten stardust
-    const craters = [
-      { x: 130, y: 725, rx: 70, ry: 26, rimCol: 0x00ffff, innerCol: 0x003355 },
-      { x: 940, y: 735, rx: 85, ry: 30, rimCol: 0xff00bb, innerCol: 0x440033 },
-      { x: 55, y: 920, rx: 100, ry: 36, rimCol: 0x00ff88, innerCol: 0x003319 },
-      { x: 1025, y: 950, rx: 95, ry: 34, rimCol: 0xaa00ff, innerCol: 0x2a0044 },
-      { x: 240, y: 1280, rx: 120, ry: 42, rimCol: 0x00f0ff, innerCol: 0x002244 },
-      { x: 840, y: 1310, rx: 130, ry: 46, rimCol: 0xff0088, innerCol: 0x3d0020 }
-    ];
-
-    for (const c of craters) {
-      // Crater deep pit
+    if (kickIntensity > 0.05) {
+      const horizonY = 660;
       this.groundGraphics
-        .ellipse(c.x, c.y, c.rx, c.ry)
-        .fill({ color: c.innerCol, alpha: 0.85 });
-
-      // Crater sunlit outer lip
-      this.groundGraphics
-        .ellipse(c.x, c.y - 2, c.rx + 2, c.ry + 2)
-        .stroke({ width: 2.5, color: 0x6e88b8, alpha: 0.65 });
-
-      // Glowing neon mineral rim
-      this.groundGraphics
-        .ellipse(c.x, c.y, c.rx, c.ry)
-        .stroke({ width: 3.5, color: c.rimCol, alpha: 0.8 + kickIntensity * 0.2 });
-
-      // Glowing crystal mineral deposits
-      this.groundGraphics
-        .circle(c.x - c.rx * 0.3, c.y, 5)
-        .fill({ color: c.rimCol, alpha: 0.95 });
-      this.groundGraphics
-        .circle(c.x + c.rx * 0.25, c.y + 2, 4)
-        .fill({ color: 0xffffff, alpha: 0.9 });
+        .moveTo(0, horizonY + 40)
+        .bezierCurveTo(320, horizonY + 15, 680, horizonY + 48, 1080, horizonY + 25)
+        .stroke({ width: 4, color: 0x00f0ff, alpha: 0.8 + kickIntensity * 0.2 });
     }
-
-    // 5. Astronaut Boot Prints in the Lunar Dust
-    const drawBootPrint = (bx: number, by: number) => {
-      this.groundGraphics
-        .ellipse(bx, by, 7, 13)
-        .stroke({ width: 1.5, color: 0x00e5ff, alpha: 0.55 });
-      for (let r = -8; r <= 8; r += 4) {
-        this.groundGraphics
-          .moveTo(bx - 4, by + r)
-          .lineTo(bx + 4, by + r)
-          .stroke({ width: 1.2, color: 0x00e5ff, alpha: 0.45 });
-      }
-    };
-    drawBootPrint(180, 860);
-    drawBootPrint(205, 895);
-    drawBootPrint(870, 880);
-    drawBootPrint(845, 915);
   }
 
   // Tiered Holographic Cyber Dance Floor with LED Panels & Concentric Bass Ripples
@@ -645,96 +745,13 @@ export class Environment {
     }
   }
 
-  // Apollo Lunar Lander, Lunar Rover, Bio-Dome, Moon Rocks & Neon Flag
+  // Lunar Assets (Apollo LEM, Rover, Bio-Dome, Moon Rocks are in staticAssetsGraphics)
   private renderLunarAssets(kickIntensity: number) {
     this.lunarAssetsGraphics.clear();
 
-    // =========================================================================
-    // 1. APOLLO LUNAR LANDER (LEM) - Mid-Left Horizon (x: 90, y: 645)
-    // =========================================================================
-    const lemX = 90;
-    const lemY = 645;
-
-    // Four landing gear struts with round gold footpads
-    this.lunarAssetsGraphics
-      .moveTo(lemX - 15, lemY - 10)
-      .lineTo(lemX - 45, lemY + 22)
-      .stroke({ width: 3, color: 0xc8a432 });
-    this.lunarAssetsGraphics
-      .ellipse(lemX - 45, lemY + 22, 10, 4)
-      .fill({ color: 0xffd700 });
-
-    this.lunarAssetsGraphics
-      .moveTo(lemX + 15, lemY - 10)
-      .lineTo(lemX + 45, lemY + 22)
-      .stroke({ width: 3, color: 0xc8a432 });
-    this.lunarAssetsGraphics
-      .ellipse(lemX + 45, lemY + 22, 10, 4)
-      .fill({ color: 0xffd700 });
-
-    // Descent Stage (Octagonal golden thermal foil body)
-    this.lunarAssetsGraphics
-      .roundRect(lemX - 25, lemY - 22, 50, 24, 4)
-      .fill({ color: 0xd4af37 })
-      .stroke({ width: 2, color: 0xffea00 });
-
-    // Foil panel seams
-    this.lunarAssetsGraphics
-      .rect(lemX - 18, lemY - 18, 14, 16)
-      .stroke({ width: 1, color: 0xffffff, alpha: 0.7 });
-    this.lunarAssetsGraphics
-      .rect(lemX + 4, lemY - 18, 14, 16)
-      .stroke({ width: 1, color: 0xffffff, alpha: 0.7 });
-
-    // Descent engine bell nozzle at bottom
-    this.lunarAssetsGraphics
-      .moveTo(lemX - 8, lemY + 2)
-      .lineTo(lemX + 8, lemY + 2)
-      .lineTo(lemX + 12, lemY + 12)
-      .lineTo(lemX - 12, lemY + 12)
-      .closePath()
-      .fill({ color: 0x111625 })
-      .stroke({ width: 1.5, color: 0x00f0ff });
-
-    // Ascent Stage (Cockpit with glowing triangular cyber visor windows)
-    this.lunarAssetsGraphics
-      .roundRect(lemX - 20, lemY - 45, 40, 24, 6)
-      .fill({ color: 0x33415c })
-      .stroke({ width: 2, color: 0x111625 });
-
-    // Glowing Cyan Cockpit Windows
-    this.lunarAssetsGraphics
-      .moveTo(lemX - 14, lemY - 38)
-      .lineTo(lemX - 4, lemY - 38)
-      .lineTo(lemX - 8, lemY - 30)
-      .closePath()
-      .fill({ color: 0x00ffff, alpha: 0.95 });
-    this.lunarAssetsGraphics
-      .moveTo(lemX + 4, lemY - 38)
-      .lineTo(lemX + 14, lemY - 38)
-      .lineTo(lemX + 8, lemY - 30)
-      .closePath()
-      .fill({ color: 0x00ffff, alpha: 0.95 });
-
-    // VHF Antenna on top
-    this.lunarAssetsGraphics
-      .moveTo(lemX, lemY - 45)
-      .lineTo(lemX, lemY - 60)
-      .stroke({ width: 1.5, color: 0xffffff });
-    this.lunarAssetsGraphics
-      .circle(lemX, lemY - 60, 2.5)
-      .fill({ color: 0x00ff88 });
-
-    // =========================================================================
-    // 2. APOLLO LUNAR RAVE FLAG (x: 290, y: 640)
-    // =========================================================================
+    // 1. Animated Waving Neon Flag
     const flagX = 290;
     const flagY = 642;
-    this.lunarAssetsGraphics
-      .moveTo(flagX, flagY)
-      .lineTo(flagX, flagY - 55)
-      .stroke({ width: 2.5, color: 0xe0e0e0 });
-
     const wave = Math.sin(this.time * 3) * 4;
     this.lunarAssetsGraphics
       .moveTo(flagX, flagY - 55)
@@ -745,96 +762,26 @@ export class Environment {
       .fill({ color: 0xff00bb })
       .stroke({ width: 2, color: 0x00ffff });
 
-    // Crescent moon logo on flag
-    this.lunarAssetsGraphics
-      .circle(flagX + 14, flagY - 44 + wave * 0.5, 6)
-      .fill({ color: 0xffea00 });
-    this.lunarAssetsGraphics
-      .circle(flagX + 17, flagY - 44 + wave * 0.5, 5)
-      .fill({ color: 0xff00bb });
+    this.lunarAssetsGraphics.circle(flagX + 14, flagY - 44 + wave * 0.5, 6).fill({ color: 0xffea00 });
+    this.lunarAssetsGraphics.circle(flagX + 17, flagY - 44 + wave * 0.5, 5).fill({ color: 0xff00bb });
 
-    // =========================================================================
-    // 3. LUNAR OUTPOST BIO-DOME (Mid-Right Horizon, x: 790, y: 645)
-    // =========================================================================
+    // 2. Dome Blinking Beacon Light
     const domeX = 790;
     const domeY = 645;
-    this.lunarAssetsGraphics
-      .ellipse(domeX, domeY, 56, 32)
-      .fill({ color: 0x091428, alpha: 0.9 })
-      .stroke({ width: 2.5, color: 0x00e5ff, alpha: 0.9 });
-
-    this.lunarAssetsGraphics
-      .ellipse(domeX, domeY - 6, 28, 16)
-      .fill({ color: 0x00ffaa, alpha: 0.4 + kickIntensity * 0.25 })
-      .stroke({ width: 2, color: 0xffffff });
-
-    this.lunarAssetsGraphics
-      .moveTo(domeX, domeY - 32)
-      .lineTo(domeX, domeY - 65)
-      .stroke({ width: 2.5, color: 0x00e5ff });
-    const dishAngle = Math.sin(this.time * 1.5) * 0.3;
-    this.lunarAssetsGraphics
-      .ellipse(domeX + Math.sin(dishAngle) * 8, domeY - 65, 14, 6)
-      .stroke({ width: 2, color: 0xffea00 });
-
     const beaconCol = Math.sin(this.time * 5) > 0 ? 0xff0055 : 0x440011;
     this.lunarAssetsGraphics.circle(domeX, domeY - 65, 3.5).fill({ color: beaconCol });
 
-    // =========================================================================
-    // 4. LUNAR ROVER (LRV) - Far Right Horizon (x: 990, y: 648)
-    // =========================================================================
+    // 3. Rover Headlight Beam
     const roverX = 990;
     const roverY = 648;
-    this.lunarAssetsGraphics
-      .circle(roverX - 18, roverY + 10, 8)
-      .stroke({ width: 2, color: 0x99aacc });
-    this.lunarAssetsGraphics
-      .circle(roverX + 18, roverY + 10, 8)
-      .stroke({ width: 2, color: 0x99aacc });
-
-    this.lunarAssetsGraphics
-      .roundRect(roverX - 22, roverY - 4, 44, 12, 3)
-      .fill({ color: 0x242d44 })
-      .stroke({ width: 1.5, color: 0x00ffff });
-
     this.lunarAssetsGraphics
       .moveTo(roverX - 22, roverY)
       .lineTo(roverX - 85, roverY - 12)
       .lineTo(roverX - 85, roverY + 16)
       .closePath()
       .fill({ color: 0x00ffff, alpha: 0.15 + kickIntensity * 0.1 });
-
-    this.lunarAssetsGraphics
-      .moveTo(roverX + 2, roverY - 4)
-      .lineTo(roverX + 2, roverY - 18)
-      .stroke({ width: 1.5, color: 0xffea00 });
-    this.lunarAssetsGraphics
-      .ellipse(roverX + 2, roverY - 18, 9, 4)
-      .stroke({ width: 1.5, color: 0xffea00 });
-
-    // =========================================================================
-    // 5. 3D-SHADED MOON BOULDERS WITH GLOWING NEON CRYSTAL CRACKS
-    // =========================================================================
-    const drawMoonRock = (rx: number, ry: number, rw: number, rh: number, crystalCol: number) => {
-      this.lunarAssetsGraphics
-        .ellipse(rx, ry, rw, rh)
-        .fill({ color: 0x222a40 })
-        .stroke({ width: 1.5, color: 0x4d5f85 });
-      this.lunarAssetsGraphics
-        .ellipse(rx - rw * 0.2, ry - rh * 0.2, rw * 0.5, rh * 0.4)
-        .fill({ color: 0x364463 });
-      this.lunarAssetsGraphics
-        .moveTo(rx - rw * 0.4, ry)
-        .lineTo(rx, ry + rh * 0.3)
-        .lineTo(rx + rw * 0.4, ry - rh * 0.2)
-        .stroke({ width: 2, color: crystalCol, alpha: 0.85 });
-    };
-
-    drawMoonRock(50, 780, 24, 15, 0x00ffff);
-    drawMoonRock(1030, 810, 28, 17, 0xff00bb);
-    drawMoonRock(40, 1080, 32, 18, 0x00ff88);
-    drawMoonRock(1040, 1120, 34, 19, 0xffea00);
   }
+
 
   // Dynamic Moving Head Stage Floor Floodlights (Vibrant Color Washes)
   private renderStageWash(kickIntensity: number) {
@@ -867,24 +814,17 @@ export class Environment {
     }
   }
 
-  // Massive Curved Cyber Stage Gateway Arch with Moving Heads & Festival Banners
+  // Curved Cyber Stage Gateway Arch (Steel beams, trusses, and fixtures are in staticArchGraphics)
   private renderStageArch(kickIntensity: number) {
     this.stageArchGraphics.clear();
 
-    // 1. Curved Overhead Stage Arch (Spanning from x: 80 to x: 1000)
-    // Outer Arch Steel Beam
-    this.stageArchGraphics
-      .moveTo(80, 680)
-      .bezierCurveTo(180, 420, 900, 420, 1000, 680)
-      .stroke({ width: 8, color: 0x1f2740 });
-
-    // Inner Arch Neon Outline
+    // 1. Inner Arch Neon Outline pulse
     this.stageArchGraphics
       .moveTo(95, 680)
       .bezierCurveTo(190, 435, 890, 435, 985, 680)
       .stroke({ width: 3.5, color: 0x00f0ff, alpha: 0.85 + kickIntensity * 0.15 });
 
-    // Animated RGB LED Chaser Pixel Dots along the arch
+    // 2. Animated RGB LED Chaser Pixel Dots along the arch
     const dotCount = 24;
     for (let i = 0; i <= dotCount; i++) {
       const p = i / dotCount;
@@ -898,49 +838,13 @@ export class Environment {
         .fill({ color: dotColor, alpha: 0.95 });
     }
 
-    // 2. Central Golden Holographic Moon Rave Crest (At top center of the arch: 540, 435)
-    const crestX = 540;
-    const crestY = 435;
-    // Glowing crest backing
-    this.stageArchGraphics
-      .circle(crestX, crestY, 26)
-      .fill({ color: 0x050d1a, alpha: 0.95 })
-      .stroke({ width: 3, color: 0xffea00, alpha: 0.95 + kickIntensity * 0.05 });
-    // Crescent emblem inside crest
-    this.stageArchGraphics
-      .circle(crestX, crestY, 14)
-      .fill({ color: 0xffea00 });
-    this.stageArchGraphics
-      .circle(crestX - 6, crestY - 3, 12)
-      .fill({ color: 0x050d1a });
-    // Crest cyber wings
-    this.stageArchGraphics
-      .moveTo(crestX - 26, crestY)
-      .lineTo(crestX - 60, crestY - 8)
-      .lineTo(crestX - 24, crestY + 8)
-      .closePath()
-      .fill({ color: 0x00f0ff, alpha: 0.85 });
-    this.stageArchGraphics
-      .moveTo(crestX + 26, crestY)
-      .lineTo(crestX + 60, crestY - 8)
-      .lineTo(crestX + 24, crestY + 8)
-      .closePath()
-      .fill({ color: 0x00f0ff, alpha: 0.85 });
-
-    // 3. Overhead Moving Head Spotlights along the arch
+    // 3. 4 Sweeping pencil-beam rays down to crowd
     const movingHeadSpots = [0.25, 0.40, 0.60, 0.75];
     for (let m = 0; m < movingHeadSpots.length; m++) {
       const p = movingHeadSpots[m];
       const mx = 80 + (1000 - 80) * p;
       const my = 680 - Math.sin(p * Math.PI) * 245;
 
-      // Fixture body
-      this.stageArchGraphics
-        .roundRect(mx - 10, my - 6, 20, 16, 4)
-        .fill({ color: 0x0f1526 })
-        .stroke({ width: 2, color: 0x00ffff });
-
-      // Sweeping pencil-beam ray down to crowd
       const beamAngle = Math.sin(this.time * 2 + m * 1.2) * 0.35;
       const targetX = mx + Math.sin(beamAngle) * 550;
       const targetY = my + Math.cos(beamAngle) * 550;
@@ -953,33 +857,6 @@ export class Environment {
         .closePath()
         .fill({ color: beamCol, alpha: 0.12 + kickIntensity * 0.15 });
     }
-
-    // 4. Side Truss Towers
-    const drawTruss = (x: number, y: number, w: number, h: number) => {
-      this.stageArchGraphics.rect(x, y, 6, h).fill({ color: 0x222a44 });
-      this.stageArchGraphics.rect(x + w - 6, y, 6, h).fill({ color: 0x222a44 });
-
-      const steps = 6;
-      const stepH = h / steps;
-      for (let i = 0; i < steps; i++) {
-        const sy = y + i * stepH;
-        this.stageArchGraphics.moveTo(x + 3, sy).lineTo(x + w - 3, sy + stepH).stroke({ width: 2, color: 0x3d4a6e });
-        this.stageArchGraphics.moveTo(x + w - 3, sy).lineTo(x + 3, sy + stepH).stroke({ width: 2, color: 0x3d4a6e });
-      }
-    };
-    drawTruss(80, 480, 180, 200);
-    drawTruss(820, 480, 180, 200);
-
-    // Neon Banners frames
-    this.stageArchGraphics
-      .roundRect(70, 475, 220, 52, 10)
-      .fill({ color: 0x0b1026, alpha: 0.9 })
-      .stroke({ width: 3.5, color: 0x00ffff, alpha: 0.95 });
-
-    this.stageArchGraphics
-      .roundRect(790, 475, 220, 52, 10)
-      .fill({ color: 0x1a0724, alpha: 0.9 })
-      .stroke({ width: 3.5, color: 0xff00bb, alpha: 0.95 });
   }
 
   // Floating Broadcast Camera Drones
