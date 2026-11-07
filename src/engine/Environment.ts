@@ -187,12 +187,12 @@ export class Environment {
     this.time += dt;
     this.earthRotation += dt * 0.12;
 
-    // Trigger floor bass ripple wave on heavy kick
-    if (kickIntensity > 0.6 && Math.random() < 0.25) {
+    // Trigger floor bass ripple wave on heavy kick (soft, subtle pulse)
+    if (kickIntensity > 0.65 && Math.random() < 0.22) {
       this.bassRipples.push({
-        radius: 60,
-        maxRadius: 650,
-        alpha: 0.85,
+        radius: 50,
+        maxRadius: 620,
+        alpha: 0.38,
         color: Math.random() > 0.5 ? 0x00f0ff : 0xff00bb
       });
     }
@@ -612,31 +612,36 @@ export class Environment {
       }
     }
 
-    // 5. Electric Energy Pulse Traces rushing from DJ booth towards crowd
+    // 5. Electric Energy Pulse Traces rushing from DJ booth towards crowd (Softened glow)
     for (let i = 0; i < 4; i++) {
       const traceX = 340 + i * 130;
-      const pulseY = 1420 - ((this.time * 280 + i * 120) % 360);
+      const pulseY = 1420 - ((this.time * 240 + i * 120) % 360);
       this.dancefloorGraphics
-        .circle(traceX, pulseY, 5)
-        .fill({ color: 0x00ffff, alpha: 0.95 });
+        .circle(traceX, pulseY, 3.5)
+        .fill({ color: 0x00ffff, alpha: 0.45 });
       this.dancefloorGraphics
         .moveTo(traceX, pulseY)
-        .lineTo(traceX, pulseY + 25)
-        .stroke({ width: 3, color: 0x00ffff, alpha: 0.7 });
+        .lineTo(traceX, pulseY + 18)
+        .stroke({ width: 1.5, color: 0x00ffff, alpha: 0.3 });
     }
 
-    // 6. Concentric Bass Ripple Waves expanding across the floor
+    // 6. Concentric Bass Ripple Waves expanding across the floor (Softened ethereal glow)
     for (let i = this.bassRipples.length - 1; i >= 0; i--) {
       const r = this.bassRipples[i];
-      r.radius += dt * 320;
-      r.alpha -= dt * 0.9;
+      r.radius += dt * 250;
+      r.alpha -= dt * 0.45;
       if (r.alpha <= 0 || r.radius > r.maxRadius) {
         this.bassRipples.splice(i, 1);
         continue;
       }
+      // Soft outer diffuse halo
       this.dancefloorGraphics
         .ellipse(540, 1260, r.radius, r.radius * 0.38)
-        .stroke({ width: 3.5, color: r.color, alpha: r.alpha });
+        .stroke({ width: 3.2, color: r.color, alpha: r.alpha * 0.22 });
+      // Soft delicate ripple contour
+      this.dancefloorGraphics
+        .ellipse(540, 1260, r.radius, r.radius * 0.38)
+        .stroke({ width: 1.4, color: 0xffffff, alpha: r.alpha * 0.45 });
     }
   }
 
@@ -1062,44 +1067,55 @@ export class Environment {
     drawLaserBeam(900, 480, this.laserAngle2 - 0.05, 0xaa00ff, 0.035);
   }
 
-  // CO2 Cryo Smoke Jets & Plasma Mist
+  // CO2 Cryo Smoke Jets & Soft Stage Plasma Mist
   private renderCryoJets(kickIntensity: number) {
     this.cryoGraphics.clear();
 
-    // Stage Front Cryo Nozzles at bottom of dancefloor (Shooting upward clouds of cold smoke)
+    // Stage Front Cryo Nozzles at bottom of dancefloor (Shooting upward soft plumes of cold smoke)
     const cryoNozzles = [220, 400, 680, 860];
-    const isCryoBlasting = kickIntensity > 0.65;
+    const isCryoBlasting = kickIntensity > 0.62;
 
     for (let i = 0; i < cryoNozzles.length; i++) {
       const nx = cryoNozzles[i];
       const ny = 1430;
 
-      // Fixture nozzle
-      this.cryoGraphics.roundRect(nx - 8, ny, 16, 12, 3).fill({ color: 0x111624 }).stroke({ width: 1.5, color: 0x00ffff });
+      // Fixture nozzle base
+      this.cryoGraphics.roundRect(nx - 7, ny, 14, 10, 2).fill({ color: 0x111624 }).stroke({ width: 1.2, color: 0x00e5ff, alpha: 0.8 });
 
-      // Plume of CO2 Cryo Gas
+      // Soft, Billowy Plume of CO2 Cryo Gas (Organic wisps, feather-soft opacity)
       if (isCryoBlasting) {
-        const blastHeight = 120 + kickIntensity * 140;
-        this.cryoGraphics
-          .moveTo(nx - 6, ny)
-          .lineTo(nx - 28, ny - blastHeight)
-          .bezierCurveTo(nx, ny - blastHeight - 30, nx + 28, ny - blastHeight, nx + 28, ny - blastHeight)
-          .lineTo(nx + 6, ny)
-          .closePath()
-          .fill({ color: 0xccf5ff, alpha: 0.35 + kickIntensity * 0.35 });
+        const blastHeight = 110 + kickIntensity * 120;
+        const numPuffs = 6;
+        for (let p = 0; p < numPuffs; p++) {
+          const progress = p / (numPuffs - 1);
+          const py = ny - progress * blastHeight;
+          const wobble = Math.sin(this.time * 7 + i * 2.1 + p * 1.3) * (progress * 12);
+          const px = nx + wobble;
+          const radX = 10 + progress * 26;
+          const radY = 7 + progress * 18;
 
-        // Outer cryo mist puff
-        this.cryoGraphics.ellipse(nx, ny - blastHeight - 15, 38, 22).fill({ color: 0x00e5ff, alpha: 0.25 });
+          // Soft translucent outer cyan cloud glow
+          const hazeAlpha = (0.04 + (1 - progress * 0.5) * 0.07) * kickIntensity;
+          this.cryoGraphics
+            .ellipse(px, py, radX * 1.35, radY * 1.3)
+            .fill({ color: 0x00f0ff, alpha: hazeAlpha });
+
+          // Soft inner wispy cryo steam puff
+          const coreAlpha = (0.07 + (1 - progress * 0.5) * 0.11) * kickIntensity;
+          this.cryoGraphics
+            .ellipse(px, py, radX, radY)
+            .fill({ color: 0xe8f8ff, alpha: coreAlpha });
+        }
       }
     }
 
-    // Low-lying lunar plasma mist layer hugging the base of the arena
+    // Low-lying lunar plasma mist layer hugging the base of the arena (Softened)
     const mistY = 1450;
     this.cryoGraphics.moveTo(0, mistY);
     for (let x = 0; x <= 1080; x += 40) {
-      const my = mistY + Math.sin(this.time * 2 + x * 0.01) * 12;
+      const my = mistY + Math.sin(this.time * 2 + x * 0.01) * 10;
       this.cryoGraphics.lineTo(x, my);
     }
-    this.cryoGraphics.lineTo(1080, 1530).lineTo(0, 1530).closePath().fill({ color: 0x5500aa, alpha: 0.12 });
+    this.cryoGraphics.lineTo(1080, 1530).lineTo(0, 1530).closePath().fill({ color: 0x5500aa, alpha: 0.07 });
   }
 }
